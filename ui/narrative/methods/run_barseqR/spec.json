@@ -11,14 +11,58 @@
     },
     "parameters": [ 
         {
-            "id": "parameter_1",
-            "optional": true,
+            "id": "genome_ref",
+            "optional": false,
             "advanced": false,
             "allow_multiple": false,
             "default_values": [ "" ],
             "field_type": "text",
             "text_options": {
-                "valid_ws_types": [ ]
+                "valid_ws_types": ["KBaseGenomes.Genome"]
+            }
+        },
+        {
+            "id": "poolfile_ref",
+            "optional": false,
+            "advanced": false,
+            "allow_multiple": false,
+            "default_values": [ "" ],
+            "field_type": "text",
+            "text_options": {
+                "valid_ws_types": ["KBasePoolTSV.PoolFile"]
+            }
+        },
+        {
+            "id": "exps_ref",
+            "optional": false,
+            "advanced": false,
+            "allow_multiple": false,
+            "default_values": [ "" ],
+            "field_type": "text",
+            "text_options": {
+                "valid_ws_types": ["KBaseExperiments.RBTnSeq"]
+            }
+        },
+        {
+            "id": "sets_ref",
+            "optional": false,
+            "advanced": false,
+            "allow_multiple": true,
+            "default_values": [ "" ],
+            "field_type": "text",
+            "text_options": {
+                "valid_ws_types": ["KBasePoolTSV.PoolCount"]
+            }
+        },
+        {
+            "id": "output_name",
+            "optional": false,
+            "advanced": false,
+            "allow_multiple": false,
+            "default_values": [ "" ],
+            "field_type": "text",
+            "text_options": {
+                "is_output_name": true
             }
         }
     ],
@@ -35,8 +79,24 @@
                     "narrative_system_variable": "workspace_id",
                     "target_property": "workspace_id"
                 },{
-                    "input_parameter": "parameter_1",
-                    "target_property": "parameter_1"
+                    "input_parameter": "genome_ref",
+                    "target_property": "genome_ref",
+                    "target_type_transform": "resolved-ref"
+                },{
+                    "input_parameter": "poolfile_ref",
+                    "target_property": "poolfile_ref",
+                    "target_type_transform": "resolved-ref"
+                },{
+                    "input_parameter": "exps_ref",
+                    "target_property": "exps_ref",
+                    "target_type_transform": "resolved-ref"
+                },{
+                    "input_parameter": "sets_ref",
+                    "target_property": "sets_ref",
+                    "target_type_transform": "resolved-ref"
+                },{
+                    "input_parameter": "output_name",
+                    "target_property": "output_name"
                 }
             ],
             "output_mapping": [

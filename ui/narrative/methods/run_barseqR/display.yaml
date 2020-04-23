@@ -1,14 +1,14 @@
 #
 # define display information
 #
-name: Method Name Here
+name: BarSeq 
 
 tooltip: |
-    Perform some kind of method
+    Perform BarSeq analysis and get website 
 
 screenshots: []
 
-icon: icon.png
+icon: BarSeqR.png
 
 #
 # define a set of similar apps that might be useful to the user
@@ -24,14 +24,41 @@ suggestions:
 # Configure the display and description of parameters
 #
 parameters :
-    parameter_1 :
+    genome_ref :
         ui-name : |
-            First parameter
+            Genome
         short-hint : |
-            The first parameter
-        long-hint  : |
-            The first parameter that needs to be entered to drive the method. This might be the first of many.
-
+            The Genome on which all the experiments are based.
+        long-hint : |
+            The Genome on which all the experiments are based.
+    poolfile_ref :
+        ui-name : |
+            Pool File
+        short-hint : |
+            The Pool File, as created by MapTnSeq and Design Random Pool
+        long-hint : |
+            Barcodes and RCBarCodes to Counts and Genes.
+    exps_ref :
+        ui-name : |
+            Experiment File
+        short-hint : |
+            The Experiments file related to this Experiment.
+        long-hint : |
+            KBase Object of TSV File with info about Experiments.
+    sets_ref :
+        ui-name : |
+            PoolCount Sets File
+        short-hint : |
+            The poolcount files which are outputs from the poolcount app.
+        long-hint : |
+            The poolcount files which are outputs from the poolcount app.
+    output_name : :
+        ui-name : |
+            Output Name
+        short-hint : |
+            No restrictions besides use of letters, numbers and underscores only.
+        long-hint : |
+            No restrictions besides use of letters, numbers and underscores only.
 description : |
     <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed pulvinar efficitur felis, quis tincidunt sem congue at. Vivamus ornare feugiat faucibus. Fusce tincidunt mattis nunc, nec varius purus convallis quis. Nulla facilisi. In at magna dolor. Suspendisse sit amet felis at arcu auctor dapibus vitae pharetra dui. Nam semper mi quis tortor fermentum mollis. Donec a arcu pharetra, rutrum dolor vitae, rutrum mauris. Donec ornare fringilla sagittis. Nam laoreet est in elementum malesuada. Vestibulum id mi eget urna hendrerit feugiat. Donec et ultrices nulla. Phasellus diam eros, dapibus at tempus nec, semper vel ante.</p>
 

@@ -94,12 +94,12 @@ class barseqR:
         # END SETUP
 
 
-        # We validate params:
+        # VALIDATE PARAMS:
         # Needs 'poolfile_ref' as poolfile ref
         val_par = validate_params(params)
 
 
-
+        # DOWNLOAD FILES
         download_dict = {
                 "dfu": dfu,
                 "gfu": gfu,
