@@ -1,0 +1,60 @@
+
+    Note, exp stands for expected
+FindBarcode(seq, quality, model, expStart, expEnd, flanking, wobbleAllowed):
+    Idea:
+        Gets the barcode from within the sequence. Uses model 
+    Inputs:
+        seq (str) is one of many DNA sequences from FASTQ input to MapTnSeq.
+        quality (str) is the quality associated with that sequence
+        model (str) is, in regex: ^n+[ACGT]+N+[ACGT]+$
+        expStart (int) is location where N's begin in model
+        expEnd (int) is index where N's end in model
+        flanking (int) is the number of nucleotides on each side that
+            must match (e.g. 5)
+        wobbleAllowed (int) is the uncertainty in location of barcode
+            or end of transposon. (e.g 2)
+    Outputs:
+        a list with [barcode, starting index] or None.
+    Process:
+        ("pre" and "post" aren't unique to the function. They are consistent
+            throughout the whole program)
+        get the pre flanking nucleotides from model, 
+            call it "pre" = model[expStart - flanking:expStart] 
+            Its length will be the same value as flanking.
+        get the post flanking nucleotides, call it "post"
+            model[expEnd+1:expEnd + 1 + flanking]
+            Its length will be the same value as flanking.
+        Use the function "FindSubstr(pre/post, seq, expStart-flanking(/expEnd + 1), 
+            wobbleAllowed)" to find preLoc/ postLoc, which are
+            start of flanking and ending flanking within 
+            sequence. 
+        Get the barcode from indeces seq[preLoc+flanking:postLoc-1]
+        Then check that barcode quality is above minQuality for all nucleotides
+
+
+FindSubstr(subseq, seq, expAt, wobble):
+    Idea:
+        Find index within seq that subseq begins
+    Inputs:
+        subseq (str): the subsequence of seq which starts at expAt
+        seq (str): the whole seq from FASTQ
+        expAt (int): the location where subseq is expected to start
+        wobble (int): wobbleAllowed from above.
+    Outputs:
+        index of subseq in seq if there, otherwise None
+    Process:
+        We want to locate the position at which the subsequence occurs.
+        And we want to make sure it's within the wobble Allowed.
+        We check within expAt - wobble to expAt + wobble whether the subseq
+        exists there in the sequence.
+
+
+CreateGeneTable():
+    Idea: Out of Genbank File Create Gene Table
+
+
+        
+
+        
+
+

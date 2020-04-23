@@ -1,0 +1,13 @@
+
+all_vars = a dict that holds within it all the variables that are needed between various functions.
+    this_dir = the directory of the file, barseq_rundir, and the rest of the program relates to it.
+    R_path = Path to the R file RunFEBA.R
+    FEBA_dir = Path to the dir which contains important info for RunFEBA.R
+    usage_str = The usage string for the inputs to the program
+    expsfile = Path to "FEBA_Barseq.tsv" file, or something like it. Experiments file format
+        explained in FileFormats.txt
+    setsdir = The directory in which the sets exist
+    sets = A list of set names inside sets dir without ".poolcount"
+    feba_strain_usage = Holds whether or not certain files are used. True or None
+    
+

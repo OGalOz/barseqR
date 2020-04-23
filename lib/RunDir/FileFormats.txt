@@ -1,0 +1,53 @@
+Experiments Files: (e.g. FEBA_BarSeq.tsv) - One per run
+    A TSV file with headers: 
+        Required:
+            SetName, Index, Description, Date_pool_expt_started
+        Others Often Included (Not necessary):
+            Drop, Person, Mutant Library,
+            gDNA plate, gDNA well, Sequenced at, Media, Growth Method,
+            Group, Temperature, pH, Liquid v. solid, Aerobic_v_Anaerobic, Shaking, Condition_1,
+            Concentration_1, Units_1, Condition_2, Concentration_2, Units_2, Timecourse, TimeCourse Sample,
+            Growth Plate ID, Growth Plate wells, StartOD, EndOD, Total Generations. 
+            (Total of 32)
+    General Description:
+        A TSV file which describes an experiment.
+    Meaning of each used value:
+        SetName
+
+
+Genes Table: (e.g. genes.GC) - One per run
+    A TSV file with headers:
+        Required:
+            scaffoldId, begin, end, strand, desc, locusId, type
+        Optional:
+            sysName,  name, GC, nTA. (Total of 11) 
+    Meaning of each:
+        locusId:
+        sysName:
+        type (int):
+            CDS - 1, 
+            rRNA - 2
+            tRNA - 5,
+            RNA - 6,
+            transcript - 6
+            pseudogene - 7
+        begin:
+        end:
+        strand:
+        name:
+        desc:
+        scaffoldId:
+        GC:
+        nTA:
+
+
+
+Pool File: (pool.n10) - One per run
+    A TSV file with headers:
+        barcode, rcbarcode, nTot, n, scaffold, strand, pos, n2
+        scaffold2, strand2, pos2, nPastEnd. (Total of 12)
+
+Set File: (*.poolcount) - Many per run
+    A TSV file with headers:
+        barcode, rcbarcode, scaffold, strand, pos, H1, H2, ... H48 (Total of 53)
+

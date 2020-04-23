@@ -1,0 +1,37 @@
+BarSeqR.pl -org organism [ -indir g/organism ]
+[ -exps indir/FEBA_BarSeq.tsv ] [ -genesfile indir/genes.GC ]
+[ -poolfile indir/pool.n10 or indir/pool ]
+[ -test | -noR | -outdir html/organism ]
+[ -metadir $metadir ]
+[ setnames ]
+
+By default, the input directory includes FEBA_BarSeq.tsv,
+genes.GC, and setname.poolcount, and the "all.poolcount" file is
+also written to this directory.  This script requires the genes
+table to include the fields locusId, sysName, scaffoldId, begin,
+end, and strand, and the experiments table to include the fields
+SetName, Index, Description, and Date_pool_expt_started.  See
+../lib/FEBA.R for additional requirements for the R step.
+
+By default, all sets in the experiments table are processed except
+for test sets, which are ignored.  If no set.poolcount is
+available, a warning is issued. Optionally, the specific set(s) to
+process can be specified.
+
+Sometimes a set is sequenced on multiple lanes. The extra files
+should have suffixes. E.g. for set1, the files would be "set1b" or
+"set1_repN" or "set1_seqNN". A warning is issued whenever this
+occurs. Otherwise, the SetName in the experiments table should
+exactly match to indir/SetName.poolcount and indir/SetName.colsum.
+
+Creates files in the output directory that can be used by
+RunFEBA.R to compute fitness values and create a mini web site in
+the output directory. These files are genes, pool, exps, and
+all.poolcount, which contains the barseq data for each strain in
+the pool, along with whether the strain is in a gene.
+
+Note -- the R step is parallel, use the MC_CORES environment
+variable to control it.
+
+Note -- by default, strainusage files in the input directory are
+used if present. Use FEBA_NO_STRAIN_USAGE=1 to turn this off.

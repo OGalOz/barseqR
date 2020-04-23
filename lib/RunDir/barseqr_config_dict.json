@@ -1,0 +1,9 @@
+{
+    "init_vars": {
+        "usage_txt_fn": "barseqr_usage.txt",
+        "R_path": "R_dir/RunFEBA.R",
+        "FEBA_dir": "R_dir",
+        "metadata_dir": "metadata"
+    }
+
+}
