@@ -1,6 +1,7 @@
 #!python3
 
 import logging
+import os
 from Bio import SeqIO
 from Util.genbank_to_gene_table import convert_genbank_to_gene_table
 
@@ -14,6 +15,8 @@ def download_files(vp, d_d):
     gfu = d_d['gfu']
     # Workspace Client:
     ws = d_d['ws']
+    # Where to download the sets to
+    sets_dir = d_d['sets_dir']
     
     # Download genbank file, get organism name 
     GenomeToGenbankResult = gfu.genome_to_genbank({
@@ -26,9 +29,12 @@ def download_files(vp, d_d):
 
     # Download pool file and get related info. Name it pool.n10, place in indir
     # Ensure related to genome through organism_name
-    download_poolfile(vp['poolfile_ref'], d_d['poolfile_path'], dfu)
+    res = download_poolfile(vp['poolfile_ref'], d_d['poolfile_path'], dfu)
+    poolfile_path, related_genome_name, related_genome_ref = res
 
-    raise Exception("Check poolfile info organism name matches genome organism")
+    if not (related_genome_name == organism_name):
+        raise Exception("Poolfile organism name does not match genome " \
+                + "organism name")
 
     # Convert genbank file to genes table, name it indir/genes.GC
     gt_cfg_dict = get_gene_table_config_dict(genbank_fp)
@@ -39,13 +45,15 @@ def download_files(vp, d_d):
     download_exps_file(dfu, d_d['exps_file'], vp['exps_ref'])
 
     # Download Set Files
-    sets_fp_list = get_sets_from_refs(vp['sets_refs'], dfu)
+    set_names_list, set_fps_list = download_sets_from_refs(vp['sets_refs'], dfu, organism_name,
+                                                            sets_dir)
+
     
-    raise Exception("Incomplete")
     
     DownloadResults = {
             "org" : organism_name,
-            "sets_fp_list": sets_fp_list
+            "set_names_list": set_names_list,
+            "set_fps_list": set_fps_list
             }
     return DownloadResults
 
@@ -62,6 +70,10 @@ def download_poolfile(poolfile_ref, poolfile_path, dfu):
     logging.info("DFU Pool File Get objects results:")
     logging.info(PoolFileObjectData)
 
+        
+    related_genome_name = PoolFileObjectData['related_organism_scientific_name']
+    related_genome_ref = PoolFileObjectData['related_genome_ref']
+
     poolfile_handle = PoolFileObjectData['poolfile']
 
 
@@ -75,7 +87,7 @@ def download_poolfile(poolfile_ref, poolfile_path, dfu):
     logging.info(ShockToFileOutput)
     # Poolfile is at location "poolfile_path"
 
-    return poolfile_path
+    return [poolfile_path, related_genome_name, related_genome_ref]
 
 
 # We want scaffold_name and description_name
@@ -109,17 +121,52 @@ def get_genome_organism_name(ws, genome_ref):
     scientific_name = res["data"][0]["data"]["scientific_name"]
     return scientific_name
 
-def get_sets_from_refs(ref_list, dfu):
-    sets_fp_list = []
-    for set_ref in ref_list:
+def download_sets_from_refs(ref_list, dfu, organism_name, sets_dir):
 
-        # Download ref
+    logging.info("Downloading .poolcount files")
 
-        sets_fp_list.append(set_fp)
+    GetObjectsParams = {
+            'object_refs': ref_list
+    }
 
-        pass
+    SetsInfoList = dfu.get_objects(GetObjectsParams)['data']
+    logging.info(SetsInfoList)
 
-    return sets_fp_list
+
+    set_names_list = []
+    set_fps_list = []
+    for obj in SetsInfoList:
+        SetInfo = obj['data']
+
+        if SetInfo['related_organism_scientific_name'] != organism_name:
+            raise Exception("Poolfile organism name does not match genome " \
+                + "organism name")
+         
+
+        setfile_handle = SetInfo['poolcount']
+        setfile_fn = SetInfo['set_name'] + ".poolcount"
+        set_names_list.append(SetInfo['set_name'])
+        setfile_fp = os.path.join(sets_dir, setfile_fn)
+
+        
+        # Set params for shock to file
+        ShockToFileParams = {
+                "handle_id": setfile_handle,
+                "file_path": setfile_fp,
+                "unpack": "uncompress"
+                }
+        ShockToFileOutput = dfu.shock_to_file(ShockToFileParams)
+        logging.info(ShockToFileOutput)
+        set_fp = ShockToFileOutput['file_path']
+        set_fps_list.append(set_fp)
+
+    logging.info("Sets Names list: ")
+    logging.info(set_names_list)
+
+    logging.info("Sets Filepaths List: ")
+    logging.info(set_fps_list)
+
+    return [set_names_list, set_fps_list]
 
 def download_exps_file(dfu, exps_fp, exps_ref):
     """
@@ -127,12 +174,12 @@ def download_exps_file(dfu, exps_fp, exps_ref):
     """
 
     GetObjectsParams = {
-            'object_refs': [expsfile_ref]
+            'object_refs': [exps_ref]
             }
 
     # We get the handle id
     expsFileObjectData = dfu.get_objects(GetObjectsParams)['data'][0]['data']
-    logging.info("DFU exps File Get objects results:")
+    logging.info("DFU Experiment File Get objects results:")
     logging.info(expsFileObjectData)
 
     expsfile_handle = expsFileObjectData['expsfile']
@@ -146,6 +193,7 @@ def download_exps_file(dfu, exps_fp, exps_ref):
             }
     ShockToFileOutput = dfu.shock_to_file(ShockToFileParams)
     logging.info(ShockToFileOutput)
+    exps_fp = ShockToFileOutput['file_path']
     # expsfile is at location "expsfile_path"
 
     return exps_fp

@@ -52,7 +52,7 @@ parameters :
             The poolcount files which are outputs from the poolcount app.
         long-hint : |
             The poolcount files which are outputs from the poolcount app.
-    output_name : :
+    output_name :
         ui-name : |
             Output Name
         short-hint : |

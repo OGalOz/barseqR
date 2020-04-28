@@ -3,6 +3,7 @@ chome=$PWD
 impl=$PWD/lib/barseqR/barseqRImpl.py
 tst=$PWD/test/barseqR_server_test.py
 mymod=$PWD/lib/RunDir
+util_dir=$PWD/lib/Util
 tmp_dir=$PWD/test_local/workdir/tmp/
 ui_dir=$PWD/ui/narrative/methods/run_barseqR/
 uspec=$PWD/ui/narrative/methods/run_barseqR/spec.json

@@ -63,5 +63,23 @@ class barseqRTest(unittest.TestCase):
         #
         # Check returned data with
         # self.assertEqual(ret[...], ...) or other unittest methods
-        ret = self.serviceImpl.run_barseqR(self.ctx, {'workspace_name': self.wsName,
-                                                             'parameter_1': 'Hello World!'})
+
+        # Needs genome_ref, poolfile_ref, exps_ref, sets_refs (list ), 
+        # output_name
+        genome_ref = "49371/5/1"
+        poolfile_ref = "49371/9/1"
+        exps_ref = "49371/11/3"
+        sets_refs = ["49371/13/3"]
+        output_name = "Test_1"
+
+        ret = self.serviceImpl.run_barseqR(self.ctx, 
+                                            {
+                                             'workspace_name': self.wsName,
+                                             'genome_ref': genome_ref,
+                                             'poolfile_ref': poolfile_ref,
+                                             'exps_ref': exps_ref,
+                                             'sets_refs': sets_refs,
+                                             'output_name': output_name
+                                             }
+                                           )
+                                                             

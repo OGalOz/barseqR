@@ -4,8 +4,9 @@
 import re
 
 
-# Following function takes a filename and a list or required fields (from TSV)
+# Following function takes a filename and a list of required fields (file is TSV)
 # Returns a list of dicts with required field pointing to value
+# Does not return header line
 def read_table(fp, required):
     with open(fp, "r") as f:
         file_str = f.read()

@@ -8,10 +8,10 @@ import logging
 import argparse
 import subprocess
 import re
-from compounds import LoadCompounds, LoadMedia, FindCompound, \
+from RunDir.compounds import LoadCompounds, LoadMedia, FindCompound, \
         GetMediaComponents,  GetMixComponents
-from feba_utils import read_table, read_column_names
-from FindGene import LocationToGene, CheckGeneLocations
+from RunDir.feba_utils import read_table, read_column_names
+from RunDir.FindGene import LocationToGene, CheckGeneLocations
 # Where is FindCompound GetMediaComponents and GetMixComponents from?
 
 
@@ -109,8 +109,8 @@ def get_args(all_vars, inp_arg_list):
     parser.add_argument("-genesfile", type=str, default=None)
     parser.add_argument("-poolfile", type=str, default=None)
     parser.add_argument("-outdir", type=str, default=None)
-    parser.add_argument("-setsdir", type=str, default=None)
-    # Sets should all be in -setsdir
+    parser.add_argument("-sets_dir", type=str, default=None)
+    # Sets should all be in -sets_dir
     parser.add_argument("-sets", type=str, nargs="+")
     # FLAGS
     # if noR or test present then their value will be 1
@@ -130,7 +130,7 @@ def get_args(all_vars, inp_arg_list):
     all_vars["genesfile"] = args.genesfile
     all_vars["poolfile"] = args.poolfile
     all_vars["outdir"] = args.outdir
-    all_vars["setsdir"] = args.setsdir
+    all_vars["sets_dir"] = args.sets_dir
     all_vars["sets"] = args.sets
     if args.noR == "1":
         all_vars["noR"] = True
@@ -371,20 +371,26 @@ def map_strains_to_genes_compute_f(all_vars):
         s, filelist = k, all_vars["setFiles"][k]
         for f in filelist:
             # We join the set names with the directory and poolcount
-            f = os.path.join(all_vars['setsdir'], f + ".poolcount")
+            f = os.path.join(all_vars['sets_dir'], f + ".poolcount")
             with open(f, "r") as fh:
                 file_length = len(fh.read().split("\n"))
             
             # Note we open files here! Close after writing all.poolcount
             fh = open(f,"r")
 
-            # We read the first line
+            # We read the first line and store it for later.
             first_line = fh.readline()
+
+            # We add the filehandle and file_length to setFh
             if s in setFh:
                 setFh[s].append([fh, file_length])
             else:
                 setFh[s] = [[fh, file_length]]
+
+            # We use the first line from before
             first_line = first_line.rstrip()
+
+            # 
             fields = first_line.split("\t")
             if not (len(fields) >= 6):
                 raise Exception("Too few fields in " + f)
@@ -484,24 +490,23 @@ def metadata_set_file_check(all_vars):
 
 
 def find_set_files(all_vars):
+    """
+    Here we take sets and convert them to ".poolcount" files
 
-    # This can be redone just to capture the poolcount files
+    we use sets dir and just add set_name to .poolcount
+    """
     
     
 
     # List of candidate poolcount files (pc - poolcount)
     pcfiles = []
-    dir_files = os.listdir(all_vars["indir"])
-    for f in dir_files:
-        x = re.match(r"^(.*)[.]poolcount$", f)
-        if x:
-            pcfiles.append(".".join(f.split(".")[:-1]))
-    if len(pcfiles) == 0:
-        raise Exception("No *.poolcount files in {}\n".format(all_vars["indir"]))
+    for s in all_vars['sets']:
+        fn = s + ".poolcount"
+        pcfiles.append(os.path.join(all_vars['sets_dir'], fn))
 
     all_vars["pcfiles"] = pcfiles
-
-    logging.debug(pcfiles)
+    logging.info("PoolCount Files:")
+    logging.info(pcfiles)
 
     sets_dict = {i: 1 for i in all_vars["sets"]}
     # Below set to list of prefixes for poolcount files
@@ -676,7 +681,10 @@ def check_unknown_media_and_compounds(all_vars):
 
 def clean_exps(all_vars):
     alpha = chr(206) + chr(177)
-    # Each exp is a dict
+    # Each exp is a dict, containing keys: SetName, Description, Index,
+    # Date_pool_expt_started.
+    
+    # We keep track of new experiments which are cleaned up
     new_exp = []
     for exp in all_vars["exps"]:
         # Removing cases where Description is empty
@@ -691,8 +699,8 @@ def clean_exps(all_vars):
         exp["Index"] = exp["Index"].rstrip()
         new_exp.append(exp)
 
-    print(len(all_vars["exps"]))
-    print(all_vars['sets'])
+    logging.info("Number of experiments: "  + str(len(all_vars["exps"])))
+    logging.info(all_vars['sets'])
     all_vars["exps"] = new_exp
     all_vars['prespec_sets'] = len(all_vars["sets"]) > 0
     if all_vars['prespec_sets']:
@@ -746,6 +754,9 @@ def clean_exps(all_vars):
 
 
 def run_load_compounds_load_media(all_vars):
+    """
+    Here we use metadir and prepare dicts for later
+    """
 
     # Setting up the variables for LoadCompounds and LoadMedia
     # Below dict goes compound to list of [compound_name, cas, MW]
@@ -778,7 +789,7 @@ def run_load_compounds_load_media(all_vars):
 
 def check_input_dirs(all_vars):
     """
-    In this function we check existence of dirs and files
+    In this function we check existence of dirs and files- but not set files
 
     We check that indir, metadir and outdir exist as directories.
     We check that FEBA_Barseq.tsv, genes.GC, and pool.n10 are in
@@ -885,7 +896,7 @@ def test():
         "metadata",
         "-outdir",
         "tmp",
-        "-setsdir",
+        "-sets_dir",
         "Test_Files",
         "-sets",
         "SB2B_ML5_set1",

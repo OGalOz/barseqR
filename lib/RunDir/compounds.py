@@ -3,7 +3,7 @@
 import os
 import re
 import logging
-from feba_utils import read_table, read_column_names
+from RunDir.feba_utils import read_table, read_column_names
 
 # LoadCompounds happens before LoadMedia
 

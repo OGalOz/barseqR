@@ -41,6 +41,7 @@ class barseqR:
         #BEGIN_CONSTRUCTOR
         self.callback_url = os.environ['SDK_CALLBACK_URL']
         self.shared_folder = config['scratch']
+        self.ws_url = config['workspace-url']
         logging.basicConfig(format='%(created)s %(levelname)s: %(message)s',
                             level=logging.INFO)
         #END_CONSTRUCTOR
@@ -70,15 +71,15 @@ class barseqR:
         ws_id = ws.get_workspace_info({'workspace': params['workspace_name']})[0]
         
 
-        # We create indir, outdir, setsdir (Input, Output, Sets)
+        # We create indir, outdir, sets_dir (Input, Output, Sets)
         indir = os.path.join(self.shared_folder, "indir")
         os.mkdir(indir)
 
         outdir = os.path.join(self.shared_folder, "outdir")
         os.mkdir(outdir)
 
-        setsdir = os.path.join(indir, "setsdir")
-        os.mkdir(setsdir)
+        sets_dir = os.path.join(indir, "sets_dir")
+        os.mkdir(sets_dir)
 
         metadir = '/kb/module/lib/RunDir/metadata'
         if not (os.path.isdir(metadir)):
@@ -96,6 +97,8 @@ class barseqR:
 
         # VALIDATE PARAMS:
         # Needs 'poolfile_ref' as poolfile ref
+        logging.info("PARAMS:")
+        logging.info(params)
         val_par = validate_params(params)
 
 
@@ -104,13 +107,14 @@ class barseqR:
                 "dfu": dfu,
                 "gfu": gfu,
                 "ws": ws,
-                "setsdir": setsdir,
+                "sets_dir": sets_dir,
                 "poolfile_path": poolfile_path,
                 "gene_table_fp": gene_table_fp,
                 "exps_file": exps_file
                 }
         # We copy input files to proper directories.
         # vp must contain genome_ref, poolfile_ref, exps_ref, sets_refs (list)
+        # DownloadResults must contain keys 'org', 'set_names_list', 'set_fps_list'
         DownloadResults = download_files(val_par, download_dict)
 
 
@@ -125,16 +129,16 @@ class barseqR:
 
         # Get args in this format:
         # [-org, org_name, -indir, Scratch_Dir_Input, -metadir, Fixed meta dir,
-        # -outdir, scratch_dir_output, -setsdir, within scratch_dir_input, 
-        # -sets, set1 (setsdir), set2 (setsdir), set3 (setsdir), ... ]
+        # -outdir, scratch_dir_output, -sets_dir, within scratch_dir_input, 
+        # -sets, set1 (sets_dir), set2 (sets_dir), set3 (sets_dir), ... ]
         # Note meta dir is called metadata and is in RunDir
 
         # Running the entire program:
         arg_list = ["-org", DownloadResults['org'], '-indir', indir,
                 '-metadir', metadir, '-outdir', outdir, 
-                '-setsdir', setsdir, '-sets']
-        arg_list += DownloadResults['sets_fp_list']
-        BarSeqR(arg_list)
+                '-sets_dir', sets_dir, '-sets']
+        arg_list += DownloadResults['set_names_list']
+        RunBarSeq(arg_list)
 
 
         report = KBaseReport(self.callback_url)

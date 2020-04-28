@@ -50,4 +50,5 @@ Pool File: (pool.n10) - One per run
 Set File: (*.poolcount) - Many per run
     A TSV file with headers:
         barcode, rcbarcode, scaffold, strand, pos, H1, H2, ... H48 (Total of 53)
-
+    Required headers:
+            

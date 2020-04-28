@@ -1,0 +1,88 @@
+.
+├── Dockerfile
+├── LICENSE
+├── Makefile
+├── README.md
+├── RELEASE_NOTES.md
+├── barseqR.spec
+├── data
+│   └── README.md
+├── dependencies.json
+├── deploy.cfg
+├── dirtree.txt
+├── g_script.sh
+├── kbase.yml
+├── lib
+│   ├── README.md
+│   ├── RunDir
+│   │   ├── BarSeqR.py
+│   │   ├── FileFormats.txt
+│   │   ├── FindGene.py
+│   │   ├── FunctionDefinitions.txt
+│   │   ├── R_dir
+│   │   │   ├── RunFEBA.R
+│   │   │   └── lib
+│   │   │       ├── FEBA.R
+│   │   │       ├── FEBA_template.html
+│   │   │       ├── PoolStats.R
+│   │   │       ├── comb.R
+│   │   │       └── desc_short_rules
+│   │   ├── Test_Files
+│   │   ├── VariableDefinitions.txt
+│   │   ├── __pycache__
+│   │   ├── barseqr_config_dict.json
+│   │   ├── barseqr_usage.txt
+│   │   ├── compounds.py
+│   │   ├── feba_utils.py
+│   │   ├── metadata
+│   │   │   ├── Compounds.tsv
+│   │   │   ├── media
+│   │   │   └── mixes
+│   │   ├── run_barseqR.py
+│   │   ├── tester.txt
+│   │   └── tmp
+│   ├── Util
+│   │   ├── __init__.py
+│   │   ├── downloader.py
+│   │   ├── genbank_to_gene_table.py
+│   │   └── validate.py
+│   ├── barseqR
+│   │   ├── __init__.py
+│   │   ├── barseqRImpl.py
+│   │   ├── barseqRImpl.py.bak-2020-04-23-17-09-23
+│   │   └── barseqRServer.py
+│   └── installed_clients
+│       ├── DataFileUtilClient.py
+│       ├── GenomeFileUtilClient.py
+│       ├── KBaseReportClient.py
+│       ├── WorkspaceClient.py
+│       ├── __init__.py
+│       ├── authclient.py
+│       └── baseclient.py
+├── scripts
+│   ├── entrypoint.sh
+│   ├── prepare_deploy_cfg.py
+│   └── run_async.sh
+├── sdk.cfg
+├── set_env_vars.sh
+├── test
+│   ├── README.md
+│   └── barseqR_server_test.py
+├── test_local
+│   ├── readme.txt
+│   ├── run_bash.sh
+│   ├── run_docker.sh
+│   ├── run_tests.sh
+│   └── test.cfg
+├── tox.ini
+└── ui
+    ├── README.md
+    └── narrative
+        └── methods
+            └── run_barseqR
+                ├── display.yaml
+                ├── img
+                │   └── BarSeqR.png
+                └── spec.json
+
+20 directories, 65 files
