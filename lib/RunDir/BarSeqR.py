@@ -12,7 +12,6 @@ from RunDir.compounds import LoadCompounds, LoadMedia, FindCompound, \
         GetMediaComponents,  GetMixComponents
 from RunDir.feba_utils import read_table, read_column_names
 from RunDir.FindGene import LocationToGene, CheckGeneLocations
-# Where is FindCompound GetMediaComponents and GetMixComponents from?
 
 
 def main_run(config_fp, inp_arg_list, this_file_dir):
@@ -110,14 +109,16 @@ def get_args(all_vars, inp_arg_list):
     parser.add_argument("-poolfile", type=str, default=None)
     parser.add_argument("-outdir", type=str, default=None)
     parser.add_argument("-sets_dir", type=str, default=None)
-    # Sets should all be in -sets_dir
-    parser.add_argument("-sets", type=str, nargs="+")
     # FLAGS
     # if noR or test present then their value will be 1
     parser.add_argument("-noR", action="store_const", const="1", default="0")
     parser.add_argument("-test", action="store_const", const="1", default="0")
     parser.add_argument("-feba_strain_usage", action="store_const", const="1",
             default="0")
+    # Sets should all be in -sets_dir
+    # Sets should just be the set names without extensions
+    parser.add_argument("-sets", type=str, nargs="+")
+
 
     # Running argparser
     args = parser.parse_args(inp_arg_list)
@@ -370,8 +371,8 @@ def map_strains_to_genes_compute_f(all_vars):
     for k in all_vars["setFiles"].keys():
         s, filelist = k, all_vars["setFiles"][k]
         for f in filelist:
-            # We join the set names with the directory and poolcount
-            f = os.path.join(all_vars['sets_dir'], f + ".poolcount")
+
+            # This is just to keep track of length of file
             with open(f, "r") as fh:
                 file_length = len(fh.read().split("\n"))
             
@@ -494,59 +495,23 @@ def find_set_files(all_vars):
     Here we take sets and convert them to ".poolcount" files
 
     we use sets dir and just add set_name to .poolcount
+    We create a number of dicts that have relational info 
+    between set names and set files
     """
     
-    
-
-    # List of candidate poolcount files (pc - poolcount)
-    pcfiles = []
-    for s in all_vars['sets']:
-        fn = s + ".poolcount"
-        pcfiles.append(os.path.join(all_vars['sets_dir'], fn))
-
-    all_vars["pcfiles"] = pcfiles
-    logging.info("PoolCount Files:")
-    logging.info(pcfiles)
-
-    sets_dict = {i: 1 for i in all_vars["sets"]}
     # Below set to list of prefixes for poolcount files
     setFiles = {}
     # Below pcFile to set
     pcToSet = {}
+    #Unknown use:
+    sets_dict = {}
+    for s in all_vars['sets']:
+        fn = s + ".poolcount"
+        pcfp = os.path.join(all_vars['sets_dir'], fn)
+        setFiles[s] = [pcfp]
+        pcToSet[pcfp] = s
+        sets_dict[s] = 1
 
-    for s in all_vars["sets"]:
-        logging.debug("S: " + s)
-        pcfileThis = []
-        for pcfile in pcfiles:
-            if pcfile == s:
-                pcfileThis.append(pcfile)
-                pcToSet[pcfile] = s
-            elif pcfile not in all_vars["sets"] and (
-                pcfile[0 : len(s)].lower() == s.lower()
-            ):
-                postfix = pcfile[len(s) :]
-                if (
-                    (postfix == "" or re.search(r"^_?[a-zA-Z]$", postfix))
-                    or (re.search(r"^_rep[a-zA-Z0-9]+$", postfix))
-                    or (re.search(r"seq[a-zA-Z0-9]+$", postfix))
-                    or (re.search(r"^_re$", postfix))
-                ):
-                    logging.info("Found extra file {} for {}\n".format(pcfile, s))
-                    pcfileThis.append(pcfile)
-                    pcToSet[pcfile] = s
-        if len(pcfileThis) == 0:
-            logging.info("No poolcount file for {}, skipping it\n".format(s))
-            new_exps = []
-            for exp in all_vars["exps"]:
-                if exp["SetName"] != s:
-                    new_exps.append(exp)
-            if len(new_exps) == 0:
-                raise Exception("No experiments remaining, giving up\n")
-            all_vars["exps"] = new_exps
-        else:
-            setFiles[s] = pcfileThis
-
-    all_vars["sets"] = [x for x in all_vars["sets"] if x in setFiles]
     all_vars["setFiles"] = setFiles
     all_vars["pcToSet"] = pcToSet
     all_vars["sets_dict"] = sets_dict
@@ -682,7 +647,7 @@ def check_unknown_media_and_compounds(all_vars):
 def clean_exps(all_vars):
     alpha = chr(206) + chr(177)
     # Each exp is a dict, containing keys: SetName, Description, Index,
-    # Date_pool_expt_started.
+    # and Date_pool_expt_started.
     
     # We keep track of new experiments which are cleaned up
     new_exp = []
@@ -703,12 +668,14 @@ def clean_exps(all_vars):
     logging.info(all_vars['sets'])
     all_vars["exps"] = new_exp
     all_vars['prespec_sets'] = len(all_vars["sets"]) > 0
+
+    # In KBase we will probably go into this first if statement
     if all_vars['prespec_sets']:
+
         # ignore experiments not in pre-specified sets
-        sets_dict = {}
-        for s in all_vars["sets"]:
-            sets_dict[s] = 1
-        # Experiments will be a list of all experiments whose 'setName' is in
+        sets_dict = {s:1 for s in all_vars["sets"]}
+
+        # Experiments will be a list of all experiments whose 'SetName' is in
         # the sets
         new_exps = []
         for exp in all_vars["exps"]:
@@ -717,12 +684,16 @@ def clean_exps(all_vars):
         if len(new_exps) == 0:
             raise Exception(
                 "No experiments in specified sets " 
-                "(having Description filled out)\n"
+                "having Description filled out)\n"
+                "Check your Experiments File and "
+                "specifically the Description for"
+                " the sets (poolcount files) you "
+                "are testing."
             )
         else:
             all_vars["exps"] = new_exps
     else:
-        # Ignore tests
+        # Ignore tests - any experiment with "test" in SetName is ignored.
 
         sets_dict = {exp["SetName"]: 1 for exp in all_vars["exps"]}
 
@@ -740,11 +711,12 @@ def clean_exps(all_vars):
                 "Description and test sets.\n"
             )
         all_vars["exps"] = new_exps
+
         # We set up sets_list
         setsSeen = {}
         sets = []
         for exp in all_vars["exps"]:
-            new_set = exp["setName"]
+            new_set = exp["SetName"]
             if not new_set in setsSeen:
                 sets.append(new_set)
                 setsSeen[new_set] = 1

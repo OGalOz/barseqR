@@ -100,6 +100,7 @@ class barseqR:
         logging.info("PARAMS:")
         logging.info(params)
         val_par = validate_params(params)
+        val_par['username'] = ctx['user_id']
 
 
         # DOWNLOAD FILES
@@ -115,6 +116,7 @@ class barseqR:
         # We copy input files to proper directories.
         # vp must contain genome_ref, poolfile_ref, exps_ref, sets_refs (list)
         # DownloadResults must contain keys 'org', 'set_names_list', 'set_fps_list'
+        # set_names_list value contains the names of the sets without extensions
         DownloadResults = download_files(val_par, download_dict)
 
 

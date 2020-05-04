@@ -45,6 +45,7 @@ def download_files(vp, d_d):
     download_exps_file(dfu, d_d['exps_file'], vp['exps_ref'])
 
     # Download Set Files
+    # set_names_list just contains the names of the sets without extensions
     set_names_list, set_fps_list = download_sets_from_refs(vp['sets_refs'], dfu, organism_name,
                                                             sets_dir)
 

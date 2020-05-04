@@ -2,6 +2,8 @@
 import logging
 import os
 import sys
+import copy
+from shutil import copyfile, move
 from Bio import SeqIO
 
 
@@ -18,16 +20,22 @@ config_dict:
     
 
 The genes table must include the fields
-   scaffoldId, begin, end, strand, desc, type
+   scaffoldId, begin, end, strand, desc, type, sysName
         'type' with type=1 for protein-coding genes,
     other fields:
         sysName, name, GC, nTA
 """
 def convert_genbank_to_gene_table(genbank_filepath, output_filepath, config_dict):
 
+
+    # Change output file string to writing to output file.
+    f = open(output_filepath, "w")
+
+
     # This is the output file start line:
-    output_file_string = "scaffoldId\tbegin\tend\tstrand\tdesc\t" \
-                            + "locusId\ttype\n"
+    output_file_header = "scaffoldId\tbegin\tend\tstrand\tdesc\t" \
+                            + "locusId\ttype\tsysName\n"
+    f.write(output_file_header)
 
     # We use BioPython SeqIO to parse genbank file:
     # https://biopython.org/DIST/docs/api/Bio.SeqIO-module.html
@@ -88,10 +96,13 @@ def convert_genbank_to_gene_table(genbank_filepath, output_filepath, config_dict
 
             # Locus ID:
             if "locus_tag" in current_feat.qualifiers.keys():
-                current_row += str(current_feat.qualifiers['locus_tag'][0]) + "\t"
+                current_row += str(current_feat.qualifiers['locus_tag'][0]) + \
+                        "\t"
+                sysName = str(current_feat.qualifiers['locus_tag'][0])
             else:
                 current_row += "Unknown_Locus_tag." + "\t"
                 logging.critical("Could not find locus tag in current_feat")
+                sysName = "Unknown_Sys_Name" 
 
             # TYPE - Note that we don't like misc_feature or gene
             # May need to skip anything besides values under 10
@@ -106,24 +117,31 @@ def convert_genbank_to_gene_table(genbank_filepath, output_filepath, config_dict
                 logging.info("Could not recognize type from feature: " \
                         + typ_str)
                 typ = "0"
-            current_row += typ + "\n"
+            current_row += typ + "\t"
 
-            output_file_string += current_row
+            # Getting sysName
+
+            current_row += sysName + "\n"
+
+            f.write(current_row) 
 
     except:
         logging.critical("Could not parse all features in genbank file.")
         raise Exception("Parsing genbank file into gene table failed")
 
+    # Finish writing to gene_table file at output_filepath
+    f.close()
+
     
     #We remove duplicate gene lines and remove the last new line symbol
-    output_file_string = unduplicate_gene_table(output_file_string[:-2])
+    # f is the file handle that is still open
+    gene_table_fp = unduplicate_gene_table(output_filepath)
 
     if "keep_types" in config_dict:
         types_to_keep = config_dict["keep_types"]
-        output_file_string = keep_types_gene_table(output_file_string, 
+        gene_table_fp = keep_types_gene_table(gene_table_fp, 
                                                     types_to_keep)
-    with open(output_filepath, "w") as f:
-        f.write(output_file_string)
+
     logging.info("Wrote Gene Table to " + output_filepath)
 
     return output_filepath
@@ -132,33 +150,38 @@ def convert_genbank_to_gene_table(genbank_filepath, output_filepath, config_dict
 
 """
 This function removes duplicates from the gene table
+ Note gene_table_fp does not change throughout function!
 Inputs:
-    gene_table_string: (str) A string of the entire gene table file
+    gene_table_fp: (str) A filepath to the gene table file
 Outputs:
-    gene_table_string: (str) A string of the entire gene table file
+    gene_table_fp: (str) A filepath to the gene table file
 Process: 
     Compares the location of features and if they are the same removes
         one of the two.
 """
-def unduplicate_gene_table(gene_table_string):
+def unduplicate_gene_table(gene_table_fp):
 
+    # We read the file
+    f = open(gene_table_fp, "r")
+    header_line = f.readline()
+    if header_line == '':
+        raise Exception("Gene Table creation process broken A.")
 
-    #first we split the gene_table into lines:
-    split_list = gene_table_string.split("\n")
-    header_line = split_list[0] + "\n" 
-    gt_lines = split_list[1:]
-    logging.info("Total number of lines besides headers: " + str(len(gt_lines)))
 
     #Then for each line we check if it's a duplicate or not.
     #We add the indices of duplicate lines and then remove the lines in reverse order.
     # 'loc' means begin to end in sequence
-    splitLine = gt_lines[0].split("\t")
+    newline = f.readline()
+    splitLine = newline.split("\t")
     existing_loc = splitLine[1:3]; existing_typ = splitLine[6]
-    previous_index = 0
-    # We create a set, duplicate_line_indices
+    previous_index = 1
+    linecount = 1
+    # We create a set that keeps track of duplicate_line_indices
     duplicate_line_indices = set()
-    for i in range(1, len(gt_lines)):
-        splitLine = gt_lines[i].split("\t")
+    newline = f.readline()
+    while newline != '':
+        linecount += 1
+        splitLine = newline.split("\t")
         current_loc = splitLine[1:3]; crnt_typ = splitLine[6]
         if (current_loc[0] == existing_loc[0]) or (
                 current_loc[1] == existing_loc[1]):
@@ -170,75 +193,110 @@ def unduplicate_gene_table(gene_table_string):
                                 current_loc[0], current_loc[1],
                                 existing_typ, crnt_typ))
                 duplicate_line_indices.add(previous_index)
-                previous_index = i
+                previous_index = linecount 
             else:
                 if existing_typ == '1':
-                    duplicate_line_indices.add(i)
+                    duplicate_line_indices.add(linecount)
                 else:
                     duplicate_line_indices.add(previous_index)
 
         else:
             existing_loc = current_loc
-            previous_index = i
-    logging.info("Duplicate Lines: " + str(len(duplicate_line_indices)))
+            previous_index = linecount
+        newline = f.readline()
+    
+    f.close()
+
+    logging.info("Read {} lines from {}".format(linecount, gene_table_fp))
+
+    logging.info("Number of duplicate lines: {}".format(len(
+        duplicate_line_indices)))
 
     # Sorting indices so they ascend 
     duplicate_line_indices = sorted(list(duplicate_line_indices))
-    #removing the indeces in reverse order:
-    duplicate_line_indices.reverse()
-    for i in range(len(duplicate_line_indices)):
-        del gt_lines[duplicate_line_indices[i]]
 
-    logging.info("New total line number (after duplicate line removal): " \
-            + str(len(gt_lines)))
+    # We create another file handle so we can copy only the good lines
+    h = open(gene_table_fp, "r")
+    # We write to a copy of the file
+    g = open(gene_table_fp + ".copy", "w")
 
+    newline = h.readline()
+    linecount = 0
+    newFileLength = 0
+    while newline != '':
+        if linecount not in duplicate_line_indices:
+            g.write(newline)
+            newFileLength += 1
+        newline = h.readline()
+        linecount += 1
+    h.close()
+    g.close()
 
+    # We move the new file to the location of the old file
+    move(gene_table_fp + ".copy", gene_table_fp)
 
-    #Converting list into string again:
-    gene_table_string = header_line + "\n".join( gt_lines)
+    logging.info("New total line number (after duplicate line removal"
+                "): {}".format(newFileLength))
 
-
-    return gene_table_string
+    return gene_table_fp
 
 
 """
 Inputs:
-    gene_table_string: (str) The gene table string
+    gene_table_fp: (str) The gene table string
     types_to_keep: list<str> Each string in list is a type we want.
 Outputs:
-    gene_table_string: (str) The gene table string.
+    gene_table_fp: (str) The gene table string.
 """
-def keep_types_gene_table(gene_table_string, types_to_keep):
+def keep_types_gene_table(gene_table_fp, types_to_keep):
 
-    split_list = gene_table_string.split("\n")
-    header_line = split_list[0] + "\n" 
-    gt_lines = split_list[1:]
+    k = open(gene_table_fp, "r")
+    header_line = k.readline()
+    if header_line == '':
+        raise Exception("Gene Table creation process broken B.")
 
+    newline = k.readline()
+    LineNum = 1
     non_good_type_indices = []
-
-    #For each line, we check if its type is 1. If not, we remove it later.
-    for i in range(len(gt_lines)):
-        current_type = gt_lines[i].split("\t")[6]
+    while newline != '':
+        current_type = newline.split("\t")[6]
         if current_type not in types_to_keep:
-            non_good_type_indices.append(i)
+            non_good_type_indices.append(LineNum)
+        newline = k.readline()
+        LineNum += 1
 
-    #removing the indeces in reverse order:
-    non_good_type_indices.reverse()
-    for i in range(len(non_good_type_indices)):
-        del gt_lines[non_good_type_indices[i]]
+    k.close()
 
+    # We repeat the process from before with writing to copy
 
-    logging.info("New total line number (after type 1): " + str(len(gt_lines)))
+    # We create another file handle so we can copy only the good lines
+    h = open(gene_table_fp, "r")
+    # We write to a copy of the file
+    g = open(gene_table_fp + ".copy", "w")
 
-    #Converting list into string again:
-    gene_table_string = header_line + "\n".join(gt_lines)
+    newline = h.readline()
+    linecount = 0
+    newFileLength = 0
+    while newline != '':
+        if linecount not in non_good_type_indices:
+            g.write(newline)
+            newFileLength += 1
+        newline = h.readline()
+        linecount += 1
+    h.close()
+    g.close()
 
-    return gene_table_string
+    # We move the new file to the location of the old file
+    move(gene_table_fp + ".copy", gene_table_fp)
 
+    logging.info("New total line number (after duplicate line removal"
+                "): {}".format(newFileLength))
+
+    return gene_table_fp
 
 
 def test(args):
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(filename='ogTestLog.log', level=logging.DEBUG)
     gb_fp = args[1]
     op_fp = args[2]
     config_dict = {"keep_types": ["1","5","6"]}
