@@ -122,6 +122,7 @@ def get_genome_organism_name(ws, genome_ref):
     scientific_name = res["data"][0]["data"]["scientific_name"]
     return scientific_name
 
+# Here we download the "poolcount" files, known as sets
 def download_sets_from_refs(ref_list, dfu, organism_name, sets_dir):
 
     logging.info("Downloading .poolcount files")

@@ -44,7 +44,7 @@
             }
         },
         {
-            "id": "sets_ref",
+            "id": "sets_refs",
             "optional": false,
             "advanced": false,
             "allow_multiple": true,
@@ -91,8 +91,8 @@
                     "target_property": "exps_ref",
                     "target_type_transform": "resolved-ref"
                 },{
-                    "input_parameter": "sets_ref",
-                    "target_property": "sets_ref",
+                    "input_parameter": "sets_refs",
+                    "target_property": "sets_refs",
                     "target_type_transform": "resolved-ref"
                 },{
                     "input_parameter": "output_name",

@@ -15,6 +15,7 @@ from RunDir.FindGene import LocationToGene, CheckGeneLocations
 
 
 def main_run(config_fp, inp_arg_list, this_file_dir):
+
     # Initialize dict which contains all important variables
     all_vars = {}
 
@@ -365,10 +366,14 @@ def map_strains_to_genes_compute_f(all_vars):
     meta = "barcode rcbarcode scaffold strand pos".split(" ")
     nmeta = len(meta)
     all_vars['nmeta'] = nmeta
+
+    # Why do we do this?
     x = ["BARCODE", "RCBARCODE", "SCAFFOLD", "STRAND", "POS"]
     for i in range(len(x)):
         all_vars[x[i]] = i
+
     for k in all_vars["setFiles"].keys():
+        # Below s is setName, filelist is list of poolcount fps related
         s, filelist = k, all_vars["setFiles"][k]
         for f in filelist:
 
@@ -391,7 +396,7 @@ def map_strains_to_genes_compute_f(all_vars):
             # We use the first line from before
             first_line = first_line.rstrip()
 
-            # 
+            # Poolcount header:
             fields = first_line.split("\t")
             if not (len(fields) >= 6):
                 raise Exception("Too few fields in " + f)
@@ -402,11 +407,15 @@ def map_strains_to_genes_compute_f(all_vars):
                     )
             if not (s in setIndex):
                 # first file for this set
-                index = fields[nmeta:]
-                setIndex[s] = index
+                index_list = fields[nmeta:]
+                # setIndex of setName is mapped to all the indexes
+                setIndex[s] = index_list
                 # check that all Indexes in @exps for this set are present
-                index_dict = {x: 1 for x in index}
+                index_dict = {x: 1 for x in index_list}
+
+
                 for exp in all_vars["setExps"][s]:
+                    # Each exp is a hash of Exp file column to value
                     if not exp["SetName"] == s:
                         raise Exception("SetName not what expected")
                     if not exp["Index"] in index_dict:
@@ -443,6 +452,8 @@ def build_and_check_sets_experiments(all_vars):
     # Build list of experiments for each set
     setExps = {}
     for exp in all_vars["exps"]:
+        # Each exp is a hash of column Names to column values from 
+        # the experiments file.
         if exp["SetName"] in setExps:
             setExps[exp["SetName"]].append(exp)
         else:
@@ -503,8 +514,12 @@ def find_set_files(all_vars):
     setFiles = {}
     # Below pcFile to set
     pcToSet = {}
+
     #Unknown use:
     sets_dict = {}
+
+    # We are assuming there is only one poolcount file with setname
+    # + ".poolcount"
     for s in all_vars['sets']:
         fn = s + ".poolcount"
         pcfp = os.path.join(all_vars['sets_dir'], fn)
