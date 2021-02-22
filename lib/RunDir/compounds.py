@@ -9,6 +9,23 @@ from RunDir.feba_utils import read_table, read_column_names
 
 # First run
 def LoadCompounds(compounds_dir, compounds_dict, synonyms_dict):
+    """
+    We take compounds info from the file 'compounds.tsv', located in this 
+        directory/metadata/Compounds.tsv
+        The file has the following headers:
+            Compound, CAS, Company, CatalogNumber, FW, Synonyms, Hans80Anti, 
+                Hans80metals, FEBA_carbon, FEBA_nitrogen, FEBA_stress, All_star
+
+    Args:
+        compounds_dir: (str) Path to dir ('metadata')
+        compounds_dict: Starts as empty dict, becomes
+            compounds: dict
+                compound_name -> [compound_name, CAS (str), MW (str)]
+        synonyms_dict: Starts as empty dict, becomes
+            synonyms: dict
+                synonym_name (str) -> compound_name (str)
+
+    """
     # Uses subfunction SynToKey, read_table, read_column_names 
 
     compounds_file = os.path.join(compounds_dir, "Compounds.tsv")
@@ -19,9 +36,10 @@ def LoadCompounds(compounds_dir, compounds_dict, synonyms_dict):
         raise Exception("No rows in " + compounds_file)
 
     for row in compounds:
-        compound = row["Compound"]
+        compound = row["Compound"].strip()
         if compound in compounds_dict:
             raise Exception("Duplicate compound id {}".format(compound))
+        # mw means molar mass/ molecular weight. CAS is an ID.
         mw = row["FW"]
         if mw == "NA":
             mw = ""
@@ -32,10 +50,10 @@ def LoadCompounds(compounds_dir, compounds_dict, synonyms_dict):
                     mw, compound, compounds_file
                 )
             )
-        cas = row["CAS"]
-        cas.strip()
+        cas = row["CAS"].strip()
         if cas == "NA":
             cas = ""
+
         # Below accounts for cases where cas is multiple CAS divided by '/'
         cas = cas.split("/")[0].strip()
         if not (cas == "" or (re.search(r"^\d+[0-9-]*\d$", cas))):
@@ -69,8 +87,14 @@ def LoadCompounds(compounds_dir, compounds_dict, synonyms_dict):
 
 
 def SynToKey(syn):
+    """ We remove everything BUT the values a-z...+-, and make lower case
+        so for example "  Org- acid." becomes "Org-acid" at first,
+        then it becomes "org-acid"
+
+    """
     syn = re.sub(r"[^a-zA-Z0-9+-]", '', syn)
     return syn.lower()
+
 
 # Second Run
 # Returns two hashes:
@@ -79,6 +103,38 @@ def SynToKey(syn):
 # Handles both the media file and the mixes file
 # Does NOT look up compound synonyms or otherwise check the results
 def LoadMedia(metadir, compounds, synonyms, unknownComponents, reuseComponents):
+    """
+    Args:
+        metadir (dir path)
+        compounds: dict
+            compound_name -> [compound_name, CAS (str), MW (str)]
+        synonyms: dict
+            synonym_name (str) -> compound_name (str)
+        unknownComponents: dict
+            compound_name -> 1 if Unknown
+        reuseComponents: dict
+            compound -> media_d
+                media_d:
+                    media_name -> 1 IF some condition met
+    Returns:
+        media_dict: (d)
+            media (str) -> list<compound_l>
+                where compound_l list<compound (str), concentration (str), units (str)>
+                e.g. [Ammonium chloride, 0.25, g/L]
+        mix_dict: (d) (Like media_dict)
+            media (str) -> list<compound_l>
+                where compound_l list<compound (str), concentration (str), units (str)>
+                e.g. [Ammonium chloride, 0.25, g/L]
+        mixAttr: (d)
+            attribute (str) -> value (str) e.g.
+                Description -> Defined minimal media for soil and groundwater bacteria with glucose and MES buffer
+                or
+                Minimal -> TRUE
+        compounds: (d)
+            compound_name -> [compound_name, CAS (str), MW (str)]
+        synonyms: (d)
+            synonym_name (str) -> compound_name (str)
+    """
     # Uses subfunctions ParseMediaFile, ExpandMedia, SetupComponentList,
     # SetupExclude
     mediaFile = os.path.join(metadir, "media")
@@ -92,7 +148,7 @@ def LoadMedia(metadir, compounds, synonyms, unknownComponents, reuseComponents):
     # This is first occurence of mediaExclude
     mediaExclude = {}
     # The following are dicts
-    # media is key => list<list of len(3)>
+    # media/mix is key => list<list of len(3)>
     media, mediaAttr, mediaExclude = ParseMediaFile(mediaFile, mediaExclude)
     mix, mixAttr, mediaExclude = ParseMediaFile(mixFile, mediaExclude)
 
@@ -180,10 +236,40 @@ def LoadMedia(metadir, compounds, synonyms, unknownComponents, reuseComponents):
     return results_dict
 
 
-def SetupExclude(
-    media, excludeHash, unknownComponents, media_dict, mix, mixAttr, compounds, synonyms
-):
-    # Uses subfunctions FindCompound,
+def SetupExclude(media, excludeHash, unknownComponents, 
+                media_dict, mix, mixAttr, compounds, synonyms):
+    """
+    Args:
+        media: (str) Media name
+
+        excludeHash: (d) value from hashing above media string in dict mediaExclude
+                    compound_name (str) -> 1 IF compound included in media
+
+        unknownComponents: (d) 
+            compound_name -> 1 if Unknown
+        media_dict: (d)
+            media (str) -> list<compound_l>
+                where compound_l list<compound (str), concentration (str), units (str)>
+                e.g. [Ammonium chloride, 0.25, g/L]
+        mix: (d) (Like media_dict)
+            media (str) -> list<compound_l>
+                where compound_l list<compound (str), concentration (str), units (str)>
+                e.g. [Ammonium chloride, 0.25, g/L]
+        mixAttr: (d)
+            attribute (str) -> value (str) e.g.
+                Description -> Defined minimal media for soil and groundwater bacteria with glucose and MES buffer
+                or
+                Minimal -> TRUE
+        compounds: (d)
+            compound_name -> [compound_name, CAS (str), MW (str)]
+        synonyms: (d)
+            synonym_name (str) -> compound_name (str)
+
+    """
+
+    # Uses subfunctions FindCompound
+
+    # We set up the list of excluded
     excluded = []
     for orig in excludeHash.keys():
         compound = FindCompound(orig, compounds, synonyms)
@@ -191,6 +277,7 @@ def SetupExclude(
             excluded.append(compound)
         else:
             unknownComponents[orig] = 1
+
     # Dict of excluded compound => number of alterations
     excluded_dict = {x: 0 for x in excluded}
 
@@ -250,13 +337,35 @@ def SetupExclude(
 
 
 def ParseMediaFile(mediaFile, mediaExclude):
+    """
+    Args:
+        mediaFile: str file path
+        mediaExclude: (either empty dict or dict as listed below)
+
+    Returns:
+        comp: (d)
+            media (str) -> list<compound_l>
+            where compound_l list<compound (str), concentration (str), units (str)>
+            e.g. [Ammonium chloride, 0.25, g/L]
+        attr: (d)
+            attribute (str) -> value (str) e.g.
+                Description -> Defined minimal media for soil and groundwater bacteria with glucose and MES buffer
+                or
+                Minimal -> TRUE
+        mediaExclude: (d)
+            media (str) -> excluded compounds (d)
+                excluded compounds (d)
+                    compound_name (str) -> 1 IF compound included in media
+
+    """
     # Uses subfunction ListValidUnits
-    comp = {} # returns as "media or mix"
-    attr = {} # returns as "mediaAttr or mixAttr"
+    comp = {} # returns as "media or mix" (if media file or mix file)
+    attr = {} # returns as "mediaAttr or mixAttr" (like above)
     COMPOUND, NUMBER, UNITS = 0, 1, 2
     validUnits = {x: 1 for x in ListValidUnits()}
     validAttr = {x: 1 for x in ["Description", "Minimal", "X"]}
     curMedia = None
+    # readingCompounds is a boolean
     readingCompounds = 0
     with open(mediaFile, "r") as f:
         mf_lines = f.read().split("\n")
@@ -274,7 +383,7 @@ def ParseMediaFile(mediaFile, mediaExclude):
         elif len(F) == 2:
             att, val = F
             if att == "Media":
-                curMedia = F[1]
+                curMedia = val
                 curMedia = re.sub(r" +$", "", curMedia)
                 if curMedia in comp:
                     raise Exception("Duplicate media entry for " + curMedia)
@@ -294,7 +403,6 @@ def ParseMediaFile(mediaFile, mediaExclude):
             else:
                 raise Exception("Invalid media attribute {}".format(F[0]))
         elif len(F) == 3:
-            # LINE 324 in Perl
             if curMedia is None:
                 raise Exception(
                     "No media id yet at line:\n" "{}\nin {}".format(
@@ -340,7 +448,8 @@ def ParseMediaFile(mediaFile, mediaExclude):
                         )
                     units.strip()
                     if units == "":
-                        raise Exception("B111: " + l)
+                        raise Exception("unit missing at line {} in media file: {} ".format(
+                                        j, mediaFile))
                     if units not in validUnits:
                         raise Exception(
                             "Invalid unit "
@@ -354,17 +463,37 @@ def ParseMediaFile(mediaFile, mediaExclude):
                         )
                     comp[curMedia].append([compound, cr, units])
         else:
-            raise Exception("Wrong number of fields in:\n"
+            raise Exception("Wrong number of fields in line:\n"
                     "{}\nIn file {} at line {} ".format(l, mediaFile, j) \
                             + " Num Fields: {}".format(len(F)))
     return [comp, attr, mediaExclude]
 
 
 def ExpandMedia(media_str, media_dict, mediaExclude):
+    """
+
+    Args:
+        media_str: (str) Name of the media
+        media_dict: (d)
+            media (str) -> list<compound_l>
+                where compound_l list<compound (str), concentration (str), units (str)>
+                e.g. [Ammonium chloride, 0.25, g/L]
+        mediaExclude: (d)
+            media (str) -> excluded compounds (d)
+                excluded compounds (d)
+                    compound_name (str) -> 1 IF compound included in media
+    We go through the medias and if a media component is
+        itself another media, then we expand the media to
+        include the subcomponents of that component.
+        e.g. Media A contains 10mL of Media B, and Media B
+        is composed of compounds d, e, f. So we add d,e,f
+        in the right concentrations to Media A
+    """
     # Uses no sub functions
     components = []
     nExpand = 0
     for row in media_dict[media_str]:
+        # comp must mean component
         comp, conc, units = row
         conc = float(conc)
         if comp == media_str:
@@ -398,7 +527,8 @@ def ExpandMedia(media_str, media_dict, mediaExclude):
     media_dict[media_str] = components
     return [nExpand, mediaExclude]
 
-# media is a str, l is a list of length 3, everything else dict? 
+
+# media is a str, l is a list of lists of length 3, everything else dict? 
 def SetupComponentList(
     media,
     l,
@@ -409,13 +539,36 @@ def SetupComponentList(
     compounds,
     synonyms,
 ):
+    """ We take media name and list of compounds within media and
+    Args:
+        media: (str)
+        l: list<compound_l> hashed key media in media_dict like below. The media's compound list
+        media_dict: (d)
+            media (str) -> list<compound_l>
+                where compound_l list<compound (str), concentration (str), units (str)>
+                e.g. [Ammonium chloride, 0.25, g/L]
+        mix_dict: (d)
+            like above media_dict
+        unknownComponents: (d) 
+            compound_name -> 1 if Unknown
+        reuseComponents: dict 
+            compound -> media_d
+                media_d:
+                    media_name -> 1 IF some condition met
+        compounds: dict
+            compound_name (str) -> [compound_name, CAS (str), MW (str)]
+        synonyms: dict
+            synonym (str) -> compound_name (str)
+
+    """
     # Uses subfunctions FindCompound
     # 1 or 0
     isMedia = True if media in media_dict else False
     isMix = True if media in mix_dict else False
     if not (isMedia or isMix):
-        raise Exception("Unknown media:\n"
-                "{}".format(media))
+        raise Exception("Unknown media:\n" + media)
+
+    # index of compound within l
     COMPOUND = 0
     # transfer synonyms or record that it is unknown
     for row in l:
@@ -423,13 +576,19 @@ def SetupComponentList(
         origInMix = 1 if orig in mix_dict else 0
         if isMedia == 1 and origInMix == 1:
             if not units == "X":
-                raise Exception("Mix must be included with X units")
+                raise Exception("Mix must be included with X units. Media: {}".format(
+                    media
+                    ))
         else:
             compound = FindCompound(orig, compounds, synonyms)
             if compound is not None:
                 row[COMPOUND] = compound
             else:
                 unknownComponents[row[COMPOUND]] = 1
+
+    # Updating media dict if not updated (?) regarding synonyms.
+    media_dict[media] = l
+
     # Record repeat entries
     seen = {}
     for row in l:
@@ -447,6 +606,13 @@ def SetupComponentList(
 # Complete - syn is str, compounds and synonyms are dicts 
 # Run 4th - after GetMediaComponents
 def FindCompound(syn, compounds, synonyms):
+    """
+    syn: str
+    compounds: (d)
+        compound_name -> [compound_name, CAS (str), MW (str)]
+    synonyms: (d)
+        synonym_name (str) -> compound_name (str)
+    """
     # Uses subfunction SynToKey
     if syn in compounds:
         return syn
@@ -458,10 +624,28 @@ def FindCompound(syn, compounds, synonyms):
 # Run 3rd
 def GetMediaComponents(media_str, media_dict, mixAttr, mix):
     """
-    returns undef for unknown media; otherwise, a  
-    list of [compound,concentration,units,mix]
-    where mix is empty (not undefined) unless the compound was 
-    included indirectly via a mix
+    Args:
+        media_str: (str) Media name
+
+        media_dict: (d)
+            media (str) -> list<compound_l>
+                where compound_l list<compound (str), concentration (str), units (str)>
+                e.g. [Ammonium chloride, 0.25, g/L]
+
+        mixAttr: (d)
+            attribute (str) -> value (str) e.g.
+                Description -> Defined minimal media for soil and groundwater bacteria with glucose and MES buffer
+                or
+                Minimal -> TRUE
+
+        mix: (d)
+            like above media_dict
+
+    Returns:
+        returns undef for unknown media; otherwise, a  
+        list<[compound,concentration,units,mix]>
+        where mix is empty (not undefined) unless the compound was 
+        included indirectly via a mix
     """
     if media_str not in media_dict:
         return None
@@ -491,6 +675,11 @@ def GetMediaComponents(media_str, media_dict, mixAttr, mix):
 
 # Run last (5th)
 def GetMixComponents(mix, mix_dict):
+    """
+    Args:
+        mix: (str)
+        mix_dict: (mix - > mix_info like listed in other parts of file.)
+    """
     if mix not in mix_dict:
         return None
     else:

@@ -17,6 +17,7 @@ RunPoolStats = function(args = commandArgs(trailingOnly=TRUE)) {
 	if (file.access(poolfile,mode=4) != 0) stop("Cannot read pool file: ",poolfile);
 	if (file.access(genesfile,mode=4) != 0) stop("Cannot read genes file: ",genesfile);
 	if (is.na(as.numeric(nreadstot))) stop("nreads not numeric: ",nreadstot);
+        # converting nreadstot to numeric from string
 	nreadstot = as.numeric(nreadstot);
 
 	# Loading and checking input files

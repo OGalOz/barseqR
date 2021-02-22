@@ -2,11 +2,40 @@
 
 import logging
 import os
+import sys
 from Bio import SeqIO
 from Util.genbank_to_gene_table import convert_genbank_to_gene_table
 
 # Both vp and d_d are dicts - validate_params and download_dict, respectively.
 def download_files(vp, d_d):
+    """
+    In this function we download files using the data file util,
+    the workspace, and the genome file util.
+    genome_to_genbank spec:
+        https://github.com/kbaseapps/GenomeFileUtil/blob/master/GenomeFileUtil.spec
+    dfu.get_objects spec:
+        https://github.com/kbaseapps/DataFileUtil/blob/master/DataFileUtil.spec
+    
+    Args:
+        vp: validated params (d) (all values str)
+            genome_ref
+            poolfile_ref
+            exps_ref
+            sets_ref
+            output_name
+            workspace_name
+            
+        d_d: download dict (d), keys:
+           "dfu": dfu, datafile
+           "gfu": gfu, genomefile
+           "ws": ws, workspace
+           "smpl_s": sample service util
+           "sets_dir": sets_dir,
+           "poolfile_path": poolfile_path,
+           "gene_table_fp": gene_table_fp,
+           "exps_file": exps_file
+
+    """
     logging.info("DOWNLOADING FILES-------------------")
 
     # Data File Util Client:
@@ -19,34 +48,48 @@ def download_files(vp, d_d):
     sets_dir = d_d['sets_dir']
     
     # Download genbank file, get organism name 
+    logging.info(vp['genome_ref'])
+
+    ggo_list = get_genome_organism_name(ws, vp['genome_ref']) 
+    organism_name = ggo_list[0]
+    my_results = ggo_list[1]
+
+    logging.info(my_results)
+
+
     GenomeToGenbankResult = gfu.genome_to_genbank({
-                                                'genome_ref': vp['genome_ref']
-                                                })
+                                        'genome_ref': vp['genome_ref']
+                            })
+
 
     genbank_fp = GenomeToGenbankResult['genbank_file']['file_path']
 
-    organism_name = get_genome_organism_name(ws, vp['genome_ref']) 
 
     # Download pool file and get related info. Name it pool.n10, place in indir
     # Ensure related to genome through organism_name
     res = download_poolfile(vp['poolfile_ref'], d_d['poolfile_path'], dfu)
     poolfile_path, related_genome_name, related_genome_ref = res
 
+    '''
     if not (related_genome_name == organism_name):
         raise Exception("Poolfile organism name does not match genome " \
                 + "organism name")
+    '''
 
     # Convert genbank file to genes table, name it indir/genes.GC
     gt_cfg_dict = get_gene_table_config_dict(genbank_fp)
     convert_genbank_to_gene_table(genbank_fp, d_d['gene_table_fp'], gt_cfg_dict)
 
 
-    # Download Experiments File, name it FEBA_Barseq.TSV, place in indir
+    # Download Experiments File, name it FEBA_Barseq.TSV, place in scratch/indir
+    #download_sample_set_to_file(d_d["smpl_s"], d_d['exps_file'], vp['exps_ref'], dfu)
     download_exps_file(dfu, d_d['exps_file'], vp['exps_ref'])
+
 
     # Download Set Files
     # set_names_list just contains the names of the sets without extensions
-    set_names_list, set_fps_list = download_sets_from_refs(vp['sets_refs'], dfu, organism_name,
+    set_names_list, set_fps_list = download_sets_from_refs(vp['sets_refs'], dfu,
+                                                            organism_name,
                                                             sets_dir)
 
     
@@ -55,7 +98,8 @@ def download_files(vp, d_d):
             "org" : organism_name,
             "set_names_list": set_names_list,
             "set_fps_list": set_fps_list
-            }
+    }
+
     return DownloadResults
 
 
@@ -94,14 +138,21 @@ def download_poolfile(poolfile_ref, poolfile_path, dfu):
 # We want scaffold_name and description_name
 def get_gene_table_config_dict(genbank_fp):
 
-    record = SeqIO.read(genbank_fp, "genbank") 
+    record_generator = SeqIO.parse(open(genbank_fp), "genbank") 
+
+    # the first record is the entire scaffold (?)
+    record = next(record_generator)
+    
+    #logging.info(record)
 
     logging.info("Genbank Description: {}".format(record.description))
     logging.info("Genbank Scaffold Name: {}".format(record.id))
-    
+    my_id = record.id
+    my_desc = record.description
+
     gene_table_config_dict = {
-            "scaffold_name": record.id,
-            "description": record.description
+            "scaffold_name": my_id,
+            "description": my_desc 
             }
 
     return gene_table_config_dict
@@ -120,7 +171,7 @@ def get_genome_organism_name(ws, genome_ref):
         }
     )
     scientific_name = res["data"][0]["data"]["scientific_name"]
-    return scientific_name
+    return [scientific_name, res]
 
 # Here we download the "poolcount" files, known as sets
 def download_sets_from_refs(ref_list, dfu, organism_name, sets_dir):
@@ -170,14 +221,19 @@ def download_sets_from_refs(ref_list, dfu, organism_name, sets_dir):
 
     return [set_names_list, set_fps_list]
 
+
 def download_exps_file(dfu, exps_fp, exps_ref):
-    """
-    exps_fp is path to experiments file final loc
+    """We download an experiments file
+
+    Args:
+        dfu: DataFileUtil class object
+        exps_fp: (str) Path to download exps file to
+        exps_ref: (str) Reference to file
     """
 
     GetObjectsParams = {
             'object_refs': [exps_ref]
-            }
+    }
 
     # We get the handle id
     expsFileObjectData = dfu.get_objects(GetObjectsParams)['data'][0]['data']
@@ -199,4 +255,56 @@ def download_exps_file(dfu, exps_fp, exps_ref):
     # expsfile is at location "expsfile_path"
 
     return exps_fp
-    
+
+
+
+def download_sample_set_to_file(smpl_s, smpl_set_fp, exps_ref, dfu):
+    """We download an experiments file as sample set 
+
+    Args:
+        smpl_s: sample service util
+        exps_fp: (str) Path to download sample set file to:
+                    indir/FEBA_BarSeq.tsv
+        exps_ref: (str) Reference to file
+        dfu: DataFileUtil class object
+    """
+
+    GetObjectsParams = {
+            'object_refs': [exps_ref]
+    }
+
+    # We get the handle id
+    sampleSetRes = dfu.get_objects(GetObjectsParams)
+    logging.info(sampleSetRes)
+    sampleSetObjectData = sampleSetRes['data'][0]['data']
+    logging.info("DFU Sample Set Get objects results:")
+    logging.info(sampleSetObjectData)
+    samples = sampleSetObjectData["samples"]
+    #samples is a list of dicts with 'id', 'name', 'version'
+    for smpl in samples:
+        sm_ret = smpl_s.get_sample({
+            "id": smpl['id'],
+            "version": smpl['version'],
+            "as_admin": False
+            })
+        logging.info(sm_ret)
+
+
+    raise Exception("242")
+    # This will raise an error:
+    smpl_stfile_handle = sampleSetObjectData['expsfile']
+
+
+    # Set params for shock to file
+    ShockToFileParams = {
+            "handle_id": smpl_stfile_handle,
+            "file_path": smpl_set_fp,
+            "unpack": "uncompress"
+            }
+    ShockToFileOutput = dfu.shock_to_file(ShockToFileParams)
+    logging.info(ShockToFileOutput)
+    smpl_st_fp = ShockToFileOutput['file_path']
+    # expsfile is at location "expsfile_path"
+
+    return smpl_st_fp
+

@@ -1,5 +1,10 @@
 # FEBA.R -- analysis scripts for barcode sequencing data
 #
+
+#
+#
+#
+#
 # Uses mclapply() from the R parallel package to analyze experiments in parallel --
 # set MC_CORES to control the #CPUs used (default is 2).
 library(parallel);
@@ -104,7 +109,8 @@ GeneFitness = function(genes, strainInfo, countCond, countT0,
 AvgStrainFitness = function(strainCounts, strainT0, strainLocus,
 		 minStrainT0 = 4, minGeneT0 = 40,
 		 genesUsed=NULL, strainsUsed=NULL,
-		 # maxWeight of N corresponds to having N reads on each side (if perfectly balanced); use 0 for even weighting
+		 # maxWeight of N corresponds to having N reads on each side
+                 #     (if perfectly balanced); use 0 for even weighting
 		 # 20 on each side corresponds to a standard error of ~0.5; keep maxWeight low because outlier strains
 		 # often have higher weights otherwise.
 		 # Use maxWeight = 0 for unweighted averages.
@@ -297,13 +303,26 @@ FEBA_Fit = function(expsUsed, all, genes,
 			       debug=FALSE, computeCofit=TRUE,
                                dir=".",
 			       ...) {
+    # args:
+    #   expsUsed (dataframe)
+    #   all: all.poolcount dataframe
+    #   genes: genes.GC dataframe
+    #   genesUsed: optional
+    #   strainsUsed: optional
+    #   genesUsed12: optional
+    #   pred: dataframe 
+    # 
 
 
 	if (is.null(ignore)) {
+            # metacol is ignored 
 	    tot = colSums(all[,-metacol]);
 	    ignore = names(all)[-metacol][tot < minSampleReads];
         }
 	if (!is.null(expsUsed$Drop) && any(expsUsed$Drop, na.rm=TRUE)) {
+            # ^ na.rm: a logical value indicating whether NA values should be 
+            #   stripped before the computation proceeds. 
+            # The 'Drop' column means if Drop=TRUE then ignore file
 	    ignore = unique(c(ignore, expsUsed$name[!is.na(expsUsed$Drop) & expsUsed$Drop]));
 	}
 	if(length(ignore) > 0) {
@@ -317,7 +336,7 @@ FEBA_Fit = function(expsUsed, all, genes,
 		stop("names missing from all");
 	if(is.null(genes$scaffoldId)) stop("No scaffold for genes");
 	if(is.null(genes$begin)) stop("No begin for genes");
-	if (is.null(genes$GC)) stop("Warning: no GC field in genes");
+	if (is.null(genes$GC)) stop("Warning: no GC field in genes (percent GC content)");
 
 	expsUsed$name = as.character(expsUsed$name);
 
@@ -849,7 +868,7 @@ eqline <- function(col="grey",lty=2,lwd=1) {
 }
 
 # Crude operon predictions -- pairs of genes that are on the same strand and
-# separated by less than the median amount are predicted to be in the same opron
+# separated by less than the median amount are predicted to be in the same operon
 # Input genes is a data frame with locusId, strand, begin, end, with genes in sorted order
 # Returns a data frame with Gene1, Gene2, Sep for separation, and bOp (TRUE if predicted operon pair)
 CrudeOp = function(genes) {
@@ -883,6 +902,7 @@ prefixName = function(x, prefix) { names(x) = paste(prefix,names(x),sep=""); ret
 
 # For shortening the experiment descriptions
 applyRules = function(rules, desc) {
+    # Subs the first column of rules with second column in the desc
     for (i in 1:nrow(rules)) desc = sub(rules[i,1], rules[i, 2], desc);
     return(desc);
 }

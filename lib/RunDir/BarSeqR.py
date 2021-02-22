@@ -15,6 +15,21 @@ from RunDir.FindGene import LocationToGene, CheckGeneLocations
 
 
 def main_run(config_fp, inp_arg_list, this_file_dir):
+    """
+    This is run from the file run_barseqR in this directory.
+
+    What this program does:
+       Checks all the input files
+       Writes all poolcount file (Combines all the poolcounts)
+
+    Args:
+        config_fp: Path to config file
+        inp_arg_list: list of arguments used by BarSeq
+            [-org, org_name, -indir, Scratch_Dir_Input, -metadir, Fixed meta dir,
+             -outdir, scratch_dir_output, -sets_dir, within scratch_dir_input, 
+             -sets, set1 (sets_dir), set2 (sets_dir), set3 (sets_dir), ... ]
+        this_file_dir: the path to directory 'RunDir'
+    """
 
     # Initialize dict which contains all important variables
     all_vars = {}
@@ -25,11 +40,13 @@ def main_run(config_fp, inp_arg_list, this_file_dir):
 
     all_vars = get_args(all_vars, inp_arg_list)
 
+
     # Checking to make sure input files and dirs exist
     all_vars = check_input_dirs(all_vars)
 
 
-    # LoadCompounds and LoadMedia come from lib/Compounds.pm
+    # We add info regarding media and compounds from compounds.py
+    # 5 keys added. Listed in func.
     all_vars = run_load_compounds_load_media(all_vars)
 
     # Creating exps variable as list
@@ -39,6 +56,7 @@ def main_run(config_fp, inp_arg_list, this_file_dir):
         "Description",
         "Date_pool_expt_started",
     ]
+
     all_vars["exps"] = read_table(all_vars["expsfile"], read_table_list_input)
 
     # Cleaning exps list
@@ -60,7 +78,7 @@ def main_run(config_fp, inp_arg_list, this_file_dir):
     all_vars = build_and_check_sets_experiments(all_vars)
 
     # Map strains to genes, compute f, etc.
-    all_vars = map_strains_to_genes_compute_f(all_vars)
+    all_vars = map_strains_to_genes_open_filehandles(all_vars)
 
     # Test run stops
     if "test" in all_vars and all_vars["test"] is not None:
@@ -71,7 +89,6 @@ def main_run(config_fp, inp_arg_list, this_file_dir):
     all_vars = init_all_poolcount_str(all_vars)
 
 
-    #raise Exception("Stop")
 
     # Below is the heaviest workload function
     # Read data rows, combine and check correctness of metadata
@@ -187,9 +204,11 @@ def copy_pool_genes_strain_usage(all_vars):
             "FEBA_NO_STRAIN_USAGE"
         ):
             if not os.path.isfile(os.path.join(indir, "strainusage.genes")):
-                raise Exception("A111")
+                raise Exception("Couldn't find strainusage.genes file even " + \
+                                "though strainusage.barcodes file exists.")
             if not os.path.isfile(os.path.join(indir, "strainusage.genes12")):
-                raise Exception("A112")
+                raise Exception("Could not find strainusage.genes12 file " + \
+                                "even though strainusage.barcodes file exists.")
             logging.info("Copying over strain usage files\n")
             shutil.copyfile(os.path.join(indir, "strainusage.barcodes"), outdir)
             shutil.copyfile(os.path.join(indir, "strainusage.genes"), outdir)
@@ -204,18 +223,18 @@ def write_exps(all_vars):
     # Below write the columns in a reasonable order
     expCols = read_column_names(all_vars["expsfile"])
     expsout = os.path.join(all_vars["outdir"], "exps")
-    expsout_str = "\t".join(expCols) + "\n"
-    for exp in all_vars["exps"]:
-        out = [exp[x] for x in expCols]
-        expsout_str += "\t".join(out) + "\n"
+
+    # We only write the experiments used
     with open(expsout, "w") as g:
-        g.write(expsout_str)
+        g.write("\t".join(expCols) + "\n")
+        for exp in all_vars["exps"]:
+            out = [exp[x] for x in expCols]
+            g.write("\t".join(out) + "\n")
     logging.info("Wrote {} experiments to {}".format(len(all_vars["exps"]), expsout))
 
 def write_to_all_poolcount_and_close_filehandles(all_vars):
 
-    with open(all_vars["all_poolcount_fp"], "w") as f:
-        f.write(all_vars["all_poolcount_str"])
+    all_vars['all_poolcount_fH'].close()
     logging.info(
         "Wrote data for {} barcodes ({} in genes) to ".format(
             all_vars["nLine"], all_vars["nInGene"]
@@ -226,6 +245,7 @@ def write_to_all_poolcount_and_close_filehandles(all_vars):
     for k in all_vars['setFh'].keys():
         for f_list in all_vars['setFh'][k]:
             try:
+                # each f_list has filehandle in loc [0], len in loc [1]
                 f_list[0].close()
             except Exception:
                 logging.critical("Error Closing file: " + f_list[0])
@@ -233,25 +253,34 @@ def write_to_all_poolcount_and_close_filehandles(all_vars):
 
 
 def combine_data_rows(all_vars):
-    # We read all the data rows, combining them and checking that
+    # We read all the data rows from poolcount files, 
+    # combining them and checking that
     # the metadata is correct. Name each field SetName.Index
     # Only include items that are in the experiment list
-    namesUsed = {(x["SetName"] + "." + x["Index"]): 1 for x in all_vars["exps"]}
-    # Below if reached EOF in 1st file
+    
+    # Not sure what below code would do
+    #namesUsed = {(x["SetName"] + "." + x["Index"]): 1 for x in all_vars["exps"]}
+
+    # Below is 1 if reached EOF in 1st file
     lastline = 0
+
+    # nLine refers to the line num
     nLine = 0
+
     nInGene = 0
-    print(all_vars['setFh'])
-    #raise Exception("Stop")
+
     while lastline == 0:
         nFile = 0
         counts = {}
         nLine += 1
         metavalues = []
         for k in all_vars["setFh"].keys():
-            # ind refers to the line num
             s, fhlist = k, all_vars["setFh"][k]
+
+            # Indexes is the list of indexes in the poolcount file
+            # related to this set.
             indexes = all_vars["setIndex"][s]
+
             for fh_info in fhlist:
                 file_handle = fh_info[0]
                 file_length = fh_info[1]
@@ -266,6 +295,7 @@ def combine_data_rows(all_vars):
                             print(fhlist)
                             raise Exception("Unexpected EOF in file for " + s)
                 else:
+                    # Next line from the poolcount file
                     line = line.rstrip()
                     F = line.split("\t")
                     if len(F) != (all_vars["nmeta"] + len(indexes)):
@@ -273,6 +303,7 @@ def combine_data_rows(all_vars):
                             "Wrong num columns at line "
                             "{} in file for {}".format(nLine, s)
                         )
+                    # The meta info related to this poolcount line
                     metaThis = F[0 : (all_vars["nmeta"])]
                     # save or check metadata
                     if nFile == 1:
@@ -287,9 +318,10 @@ def combine_data_rows(all_vars):
                                     + "in {} line {}, expected {}\n".format(
                                         s, nLine, metavalues[i]
                                     )
-                                    + "You may need to rerun combineBarSeq.pl "
-                                    "with the new pool\n or use bin/resortPoolCount.pl to make it match\n"
+                                    + "You may need to rerun combineBarSeq" \
+                                     + "with a new pool\n"
                                 )
+
                 # and increment counts
                 for i in range(len(indexes)):
                     index = indexes[i]
@@ -325,9 +357,9 @@ def combine_data_rows(all_vars):
                 nInGene += 1
 
             # We add a tab separated line to all.poolcount
-            all_vars["all_poolcount_str"] += "\t".join(["\t".join(metavalues), 
+            all_vars["all_poolcount_fH"].write("\t".join(["\t".join(metavalues), 
                 locusId, str(f), "\t".join([str(x) for x in countsUsed])]) + \
-                        "\n"
+                        "\n")
 
     if nInGene == 0:
         raise Exception(
@@ -348,13 +380,16 @@ def init_all_poolcount_str(all_vars):
     allfields = "barcode rcbarcode scaffold strand pos locusId f".split(" ")
     for exp in all_vars["exps"]:
         allfields.append(exp["SetName"] + "." + exp["Index"])
-    all_pool_str = "\t".join(allfields) + "\n"
-    all_vars["all_poolcount_str"] = all_pool_str
+
+    # We initiate file handle for all.poolcount
+    allfile_handle = open(allfile, "w")
+    allfile_handle.write("\t".join(allfields) + "\n")
+    all_vars["all_poolcount_fH"] = allfile_handle
     return all_vars
 
 
-def map_strains_to_genes_compute_f(all_vars):
-    # Here we map strains to genes, compute "f",
+def map_strains_to_genes_open_filehandles(all_vars):
+    # Here we map strains to genes,
     # combine counts, read each file in parallel
 
     # Below is set to list of file handles reading counts for that set
@@ -367,7 +402,7 @@ def map_strains_to_genes_compute_f(all_vars):
     nmeta = len(meta)
     all_vars['nmeta'] = nmeta
 
-    # Why do we do this?
+    # We create this to have index loc for below keys within files
     x = ["BARCODE", "RCBARCODE", "SCAFFOLD", "STRAND", "POS"]
     for i in range(len(x)):
         all_vars[x[i]] = i
@@ -416,8 +451,12 @@ def map_strains_to_genes_compute_f(all_vars):
 
                 for exp in all_vars["setExps"][s]:
                     # Each exp is a hash of Exp file column to value
+
+                    # This just makes sure earlier processes are correct
                     if not exp["SetName"] == s:
                         raise Exception("SetName not what expected")
+                    # Here is where we check if indexes align between 
+                    # poolcount file and experiments file
                     if not exp["Index"] in index_dict:
                         logging.warning(
                             "WARNING! No field for indx {}".format(exp["Index"])
@@ -429,6 +468,7 @@ def map_strains_to_genes_compute_f(all_vars):
                         )
             else:
                 # Additional file for this set
+                # expect is the list of expected indices
                 expect = setIndex[s]
                 for i in range(len(expect)):
                     field = fields[nmeta + i]
@@ -535,7 +575,9 @@ def find_set_files(all_vars):
 
 
 def set_up_gene_vars(all_vars):
-    # returns a list of dicts with each of the keys associated to values
+    """
+
+    """
     genes = read_table(
         all_vars["genesfile"],
         ("locusId scaffoldId sysName begin end strand".split(" ")),
@@ -556,7 +598,6 @@ def set_up_gene_vars(all_vars):
 
     all_vars["genes"], all_vars["genesSorted"] = genes, genesSorted
 
-    # Writes to STDERR
     CheckGeneLocations(genesSorted)
 
     return all_vars
@@ -660,6 +701,11 @@ def check_unknown_media_and_compounds(all_vars):
 
 
 def clean_exps(all_vars):
+    """
+    We remove experiments which don't have good entries in the
+        experiments file
+    """
+    # We get the chars for an alpha symbol
     alpha = chr(206) + chr(177)
     # Each exp is a dict, containing keys: SetName, Description, Index,
     # and Date_pool_expt_started.
@@ -743,10 +789,30 @@ def clean_exps(all_vars):
 def run_load_compounds_load_media(all_vars):
     """
     Here we use metadir and prepare dicts for later
+
+    Keys added:
+        media_dict: (d)
+            media (str) -> list<compound_l>
+                where compound_l list<compound (str), concentration (str), units (str)>
+                e.g. [Ammonium chloride, 0.25, g/L]
+        mix_dict: (d) (Like media_dict)
+            media (str) -> list<compound_l>
+                where compound_l list<compound (str), concentration (str), units (str)>
+                e.g. [Ammonium chloride, 0.25, g/L]
+        mixAttr: (d)
+            attribute (str) -> value (str) e.g.
+                Description -> Defined minimal media for soil and groundwater bacteria with glucose and MES buffer
+                or
+                Minimal -> TRUE
+        compounds: (d)
+            compound_name -> [compound_name, CAS (str), MW (str)]
+        synonyms: (d)
+            synonym_name (str) -> compound_name (str)
     """
 
     # Setting up the variables for LoadCompounds and LoadMedia
     # Below dict goes compound to list of [compound_name, cas, MW]
+    # where cas is a string ID of compound, MW is Molar Weight
     compounds_dict = {}
     # Below dict goes from SynToKey => compound name
     synonyms_dict = {}
@@ -757,7 +823,8 @@ def run_load_compounds_load_media(all_vars):
 
     # Below dict is media components with no match in compounds table
     unknownComponents = {}
-    # Below dict is compoenent => media => 1 if it is reused
+
+    # Below dict is component => media => 1 if it is reused
     reuseComponents = {}
 
     LoadMediaResultsDict = LoadMedia(
@@ -767,6 +834,7 @@ def run_load_compounds_load_media(all_vars):
         unknownComponents,
         reuseComponents,
     )
+
     #updates the keys "media_dict", "mix_dict", "mixAttr", "compounds_dict",
     # "synonyms_dict"
     all_vars.update(LoadMediaResultsDict)

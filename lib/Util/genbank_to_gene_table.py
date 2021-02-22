@@ -18,7 +18,6 @@ config_dict:
     OPTIONAL
     keep_types: (list) If you only want specific types
     
-
 The genes table must include the fields
    scaffoldId, begin, end, strand, desc, type, sysName
         'type' with type=1 for protein-coding genes,
@@ -39,8 +38,9 @@ def convert_genbank_to_gene_table(genbank_filepath, output_filepath, config_dict
 
     # We use BioPython SeqIO to parse genbank file:
     # https://biopython.org/DIST/docs/api/Bio.SeqIO-module.html
-    gb_record = SeqIO.read(open(genbank_filepath, "r"), "genbank")
+    gb_record_generator = SeqIO.parse(open(genbank_filepath, "r"), "genbank")
 
+    gb_record = next(gb_record_generator)
     genome_name = gb_record.name
     #Genome sequence:
     g_seq = gb_record.seq

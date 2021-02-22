@@ -30,6 +30,7 @@ def LocationToGene(scaffold, pos, sortedGenes):
     # binary search
     # at all times, either the true index is between lo and hi,
     # or there is no hit
+    # We search the middle of current search loc
     nGenes = len(genelist)
     lo = 0
     hi = nGenes - 1
@@ -63,10 +64,10 @@ def LocationToGene(scaffold, pos, sortedGenes):
             if strand == "-":
                 f = 1.0 - f
             return [genelist[mid]['locusId'],f]
-    raise Exception("Unreachable")
+    raise Exception("Unreachable gene in scf: {}, pos: {}".format(
+                       scaffold, pos))
 
 
-# sortedGenes is a dict
 def CheckGeneLocations(sortedGenes):
     """
     CheckGeneLocations Func Def
@@ -77,6 +78,18 @@ def CheckGeneLocations(sortedGenes):
     Each gene should be a hash that contains begin, end, strand, and locusId
     Writes a short report to STDERR and reports a reference to the list of 
     locusIds that fail (with overlap-adjacent cases excluded)
+
+    Args:
+        sortedGenes: (d)
+            scaffoldId -> gene_list (list<gene>)
+            gene: (d)
+                begin:
+                end:
+                locusId:
+
+    Returns:
+        fail: (list<locus_id_str>)
+            locus_id_str: (str) LocusId
     """
     ok = []
     wrap = []

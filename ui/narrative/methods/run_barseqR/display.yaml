@@ -1,10 +1,10 @@
 #
 # define display information
 #
-name: BarSeqR
+name: RBTnSeq BarSeqR
 
 tooltip: |
-    Perform BarSeq analysis and get website 
+    Perform RBTnSeq BarSeq analysis and get website and Visuals
 
 screenshots: []
 
@@ -45,7 +45,7 @@ parameters :
             The Experiments file related to this Experiment.
         long-hint : |
             KBase Object of TSV File with info about Experiments.
-    sets_ref :
+    sets_refs :
         ui-name : |
             PoolCount Sets File
         short-hint : |

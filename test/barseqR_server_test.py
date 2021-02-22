@@ -43,7 +43,7 @@ class barseqRTest(unittest.TestCase):
         cls.scratch = cls.cfg['scratch']
         cls.callback_url = os.environ['SDK_CALLBACK_URL']
         suffix = int(time.time() * 1000)
-        cls.wsName = "test_ContigFilter_" + str(suffix)
+        cls.wsName = "test_BARSEQR_" + str(suffix)
         ret = cls.wsClient.create_workspace({'workspace': cls.wsName})  # noqa
 
     @classmethod
@@ -52,8 +52,10 @@ class barseqRTest(unittest.TestCase):
             cls.wsClient.delete_workspace({'workspace': cls.wsName})
             print('Test workspace was deleted')
 
-    # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
-    def test_your_method(self):
+
+
+
+    def test_ci_1(self):
         # Prepare test objects in workspace if needed using
         # self.getWsClient().save_objects({'workspace': self.getWsName(),
         #                                  'objects': []})
@@ -66,10 +68,35 @@ class barseqRTest(unittest.TestCase):
 
         # Needs genome_ref, poolfile_ref, exps_ref, sets_refs (list ), 
         # output_name
-        genome_ref = "49371/5/1"
-        poolfile_ref = "49371/9/1"
-        exps_ref = "49371/11/3"
-        sets_refs = ["49371/13/3"]
+
+        # Burk 376
+        genome_ref = "58816/3/1"
+        exps_ref = "58816/9/1"
+
+        poolfile_ref = "49371/19/1"
+        sets_refs = ["49371/21/1"]
+        output_name = "Test_1"
+
+        ret = self.serviceImpl.run_barseqR(self.ctx, 
+                                            {
+                                             'workspace_name': self.wsName,
+                                             'genome_ref': genome_ref,
+                                             'poolfile_ref': poolfile_ref,
+                                             'exps_ref': exps_ref,
+                                             'sets_refs': sets_refs,
+                                             'output_name': output_name
+                                             }
+
+                                           )
+    """
+    # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
+    def test_appdev_1(self):
+        
+        genome_ref = "52416/6/1"
+        # actual new GFF + genome genome_ref = "52416/3/1"
+        poolfile_ref = "49371/19/1"
+        exps_ref = "58816/5/1"
+        sets_refs = ["49371/21/1"]
         output_name = "Test_1"
 
         ret = self.serviceImpl.run_barseqR(self.ctx, 
@@ -82,4 +109,5 @@ class barseqRTest(unittest.TestCase):
                                              'output_name': output_name
                                              }
                                            )
+    """
                                                              

@@ -2,6 +2,7 @@
 #BEGIN_HEADER
 import logging
 import os
+import sys
 
 from RunDir.run_barseqR import RunBarSeq
 from Util.validate import validate_params
@@ -10,6 +11,7 @@ from installed_clients.KBaseReportClient import KBaseReport
 from installed_clients.WorkspaceClient import Workspace
 from installed_clients.GenomeFileUtilClient import GenomeFileUtil
 from installed_clients.DataFileUtilClient import DataFileUtil
+from installed_clients.SampleServiceClient import SampleService
 #END_HEADER
 
 
@@ -50,8 +52,22 @@ class barseqR:
 
     def run_barseqR(self, ctx, params):
         """
-        This example function accepts any number of parameters and returns results in a KBaseReport
-        :param params: instance of mapping from String to unspecified object
+        Args:
+            :param params: instance of mapping from String to unspecified object
+        ctx:
+            client_ip: None or 'str', 
+            user_id: str, 
+            'authenticated': 1,
+            'token': str,
+            'module': None, 
+            'method': None, 
+            'call_id': None, 
+            'rpc_context': None, 
+            'provenance':list<prov_d>
+                prov_d: (d)
+                    service: (str)
+                    'method': 'please_never_use_it_in_production', 
+                    'method_params': []}]}
         :returns: instance of type "ReportResults" -> structure: parameter
            "report_name" of String, parameter "report_ref" of String
         """
@@ -63,14 +79,25 @@ class barseqR:
         
         logging.basicConfig(level=logging.DEBUG)
 
+        logging.info("Call back url: " + str(self.callback_url))
         # We create important classes
         dfu = DataFileUtil(self.callback_url)
+        logging.info("DFU VARS-- "*8)
+        logging.info(vars(dfu))
         gfu = GenomeFileUtil(self.callback_url)
+        smpl_s = SampleService(self.callback_url)
         myToken = os.environ.get('KB_AUTH_TOKEN', None)
         ws = Workspace(self.ws_url, token=myToken)
         ws_id = ws.get_workspace_info({'workspace': params['workspace_name']})[0]
+
+        logging.info(os.environ)
         
 
+        logging.info('ws-url')
+        logging.info(self.ws_url)
+        logging.info('ctx')
+        logging.info(ctx)
+        
         # We create indir, outdir, sets_dir (Input, Output, Sets)
         indir = os.path.join(self.shared_folder, "indir")
         os.mkdir(indir)
@@ -87,19 +114,28 @@ class barseqR:
 
 
         # We prepare locations of input files
-
         poolfile_path = os.path.join(indir, "pool.n10")
         gene_table_fp = os.path.join(indir, "genes.GC")
-        exps_file = os.path.join(indir, "FEBA_Barseq.TSV")
+        exps_file = os.path.join(indir, "FEBA_Barseq.tsv")
+
 
         # END SETUP
 
 
         # VALIDATE PARAMS:
-        # Needs 'poolfile_ref' as poolfile ref
         logging.info("PARAMS:")
         logging.info(params)
+        # From Util.validate python file
         val_par = validate_params(params)
+        '''
+        val_par contains keys:
+            genome_ref
+            poolfile_ref
+            exps_ref
+            sets_ref
+            output_name
+            workspace_name
+        '''
         val_par['username'] = ctx['user_id']
 
 
@@ -108,26 +144,26 @@ class barseqR:
                 "dfu": dfu,
                 "gfu": gfu,
                 "ws": ws,
+                "smpl_s": smpl_s,
                 "sets_dir": sets_dir,
                 "poolfile_path": poolfile_path,
                 "gene_table_fp": gene_table_fp,
                 "exps_file": exps_file
-                }
+        }
         # We copy input files to proper directories.
         # vp must contain genome_ref, poolfile_ref, exps_ref, sets_refs (list)
         # DownloadResults must contain keys 'org', 'set_names_list', 'set_fps_list'
         # set_names_list value contains the names of the sets without extensions
         DownloadResults = download_files(val_par, download_dict)
 
+        logging.debug(json.dumps(DownloadResults, indent=2))
+
+        sys.exit(0)
 
 
 
 
-        # INDIR:
-        # Indir contains Poolcount Files, FEBA_Barseq.tsv, genes.GC, pool.n10
-        # Outdir must be a directory.
-        #
-        #
+
 
         # Get args in this format:
         # [-org, org_name, -indir, Scratch_Dir_Input, -metadir, Fixed meta dir,
@@ -140,7 +176,12 @@ class barseqR:
                 '-metadir', metadir, '-outdir', outdir, 
                 '-sets_dir', sets_dir, '-sets']
         arg_list += DownloadResults['set_names_list']
+
         RunBarSeq(arg_list)
+
+
+        # Returning files to user
+
 
 
         report = KBaseReport(self.callback_url)

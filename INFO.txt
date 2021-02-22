@@ -1,2 +1,10 @@
 
+We download 3 primary filetypes:
+    1. A single 'poolfile'
+    2. The genome- which provides a gene table
+    3. The experiments file ('Sample Set' in KBase)
+
+    These are downloaded to the 'indir', which is scratch_dir/indir
+
+
 Any Experiment with "test" in SetName is ignored (Experiments File)
