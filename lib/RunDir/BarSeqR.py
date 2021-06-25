@@ -14,7 +14,12 @@ from RunDir.feba_utils import read_table, read_column_names
 from RunDir.FindGene import LocationToGene, CheckGeneLocations
 
 
-def main_run(config_fp, inp_arg_list, this_file_dir):
+
+
+
+
+
+def prepare_all_poolcount_etc(config_fp, inp_arg_list, this_file_dir):
     """
     This is run from the file run_barseqR in this directory.
 
@@ -29,6 +34,170 @@ def main_run(config_fp, inp_arg_list, this_file_dir):
              -outdir, scratch_dir_output, -sets_dir, within scratch_dir_input, 
              -sets, set1 (sets_dir), set2 (sets_dir), set3 (sets_dir), ... ]
         this_file_dir: the path to directory 'RunDir'
+
+    Description: Overall, we store all the important variables into a dict
+                called all_vars, which we pass into every function in which
+                we take out a new variable. Note that all the poolcount files,
+                including all.poolcount, should have the same exact number of
+                lines, which should be equal to the number of lines in the 
+                poolfile itself. How the program combines the poolcount
+                files is based on this fact.
+                The variable 'prespec_sets' MUST be set to True
+                within the KBase context.
+                The flow of the program is best explained by explaining 
+                each consecutive function:
+        get_config_dict:
+            We use the 'json' library to get the config loaded
+            as a python dict. Also, we add the variables 
+            'R_path', 'FEBA_dir' and 'this_dir' to all_vars.
+            The config file is 'barseqr_config_dict.json'
+        get_usage_str:
+            We add the variable "usage_str"
+            to all_vars. We get the usage string
+            from the file under the 'usage_txt_fn'
+            key in the config dict. The config file
+            must be in the same directory as 'this_dir'
+        get_args:
+            We use python's argparser library to get the arguments
+            for all these values as though they are command line arguments.
+            We add these variables to all_vars:
+            "org", "indir", "metadir", "exps", "genesfile", "poolfile", 
+            "outdir", "sets_dir","sets", "noR", "test", "feba_strain_usage"
+            Note that the following are booleans (if True) or None (if False)
+            "noR", "test", "feba_strain_usage" (the last three from above).
+            The rest of the values are strings.
+        check_input_dirs:
+            In this function we check existence of dirs and files- 
+            We check that indir, metadir and outdir exist as directories.
+            We check that FEBA_Barseq.tsv, genes.GC, and pool.n10 are in
+            indir. We check that the poolfile has the right columns.
+            Should we check existence of all 'poolcount' files?
+            We add the variables 'expsfile', 'genesfile' and 'poolfile'
+            to all_vars
+        run_load_compounds_load_media:
+            First, we use the function 'LoadCompounds' 
+            to create dicts 'compounds_dict' and 'synonyms_dict'.
+            Where 'compound_dict' maps a compound name to a list
+            containing its name, its CAS (ID), and its molecular weight,
+            and synonyms dict maps all other names of compounds
+            to the original name you would find in 'compound_dict'.
+            Then we run the function LoadMedia, which gives us
+            three new dicts: "media_dict", "mix_dict", "mixAttr". 
+            In both "media_dict" and "mix_dict", the keys are
+            the names of the media or mix (str), and the values
+            are lists of lists. Where the sublists contain
+            compounds with amounts and units. In other words
+            the two dicts contain the information for given
+            media and mixes. "mixAttr", on the other hand,
+            has keys that are the names of mixes, and those
+            point to dicts with attributes and values.
+            We add all of these new dicts to all_vars,
+        read_table:
+            Takes a TSV file and returns a list of dicts,
+            one per non-header row, with header name
+            pointing to value at that row
+        clean_exps:
+            We remove experiments (rows from exps file) which don't have 
+            good entries in the experiments file. Experiments that 
+            aren't good enough have, for example, no Description, 
+            or their 'SetName' isn't part of the input sets. 
+        check_unknown_media_and_compounds:
+            We keep track of unknown Media and compounds,
+            we don't raise Errors if these exist,
+            we keep track of them and create variables
+            "noMedia", "unknownMedia", and "unknownCompound"
+            to track them.
+        set_up_gene_vars
+            We add the variables 'genes', which is the list
+            resulting from the function 'read_table', i.e.
+            a list of dicts, one per row, with keys being 
+            column names pointing to the values.
+            We also add the variable 'genesSorted', which is 
+            a dict of scaffoldIds pointing to a sorted
+            list of genes by their beginning position
+            within the scaffold.
+        find_set_files
+            Here we take sets and convert them to ".poolcount" files
+            we use sets dir and just add set_name to .poolcount
+            Then we create two dicts:
+                1. setFiles: maps set names to poolcount filepaths
+                2. pcToSet: maps poolcount filepaths to set names (why?)
+        build_and_check_sets_experiments
+            First we create a variable called 'setExps',
+            which is a dict that goes from set name
+            to a list of experiments belonging
+            to that set (set is equivalent to 'lane').
+            We then double check that every experiment
+            name is unique.
+            Then we print to the user the total number
+            of experiments, total number of genes,
+            and total number of sets.
+        map_strains_to_genes_open_filehandles
+            First we get the number of preliminary metadata columns
+            and call it 'nmeta' and store it.
+            Then we create two dicts: 'setFh' and 'setIndex',
+            which we both store in all_vars.
+            'setFh' (python dict): 
+                Maps setName -> list<list<Filehandle, Row num (int)>>
+                Goes from setName to a list, whose length is the
+                number of poolcount files relating to that set, 
+                with each element being a list with two elements:
+                the first is the filehandle for that poolcount file,
+                the second is the length of that file.
+            'setIndex' (python dict):
+                Maps setName -> list<Indexes (str)>
+                For each setName, if the file we are looking
+                at is the first for this set, then we store the list of 
+                indexes (all column names after the metadata) in
+                this dict. Otherwise, if we've already seen a poolcount
+                file for this set, then we compare the existing indeces
+                and double check that they match the first one.
+                If they don't, then we raise an Exception because
+                they should match. We also do a redundant comparison
+                to exps SetName which should be removed.
+        init_all_poolcount_str
+            We add the variables "all_poolcount_fp" and
+            "all_poolcount_fH" to all_vars.
+            We initialize the all_poolcount file and write
+            the headers, which are:
+            barcode, rcbarcode, scaffold, strand, pos, locusId, f
+            'all_poolcount_fH' contains the file handle for
+            all.poolcount, and it already will have had the header
+            written
+        combine_data_rows
+            This is where the majority of the computation occurs
+            within this part of the program.
+            We go through each set from the 'setFh' dict,
+            which maps set name to a list of file handles (and file
+            lengths) that relate to that set.
+            Then we iterate over every line of the poolcount
+            files, all of which should be the same length,
+            and add the info from all of them into 
+            a single line of all.poolcount. So we end
+            adding lines to all.poolcount when we reach
+            the last line of the poolcount files.
+            Simply combine the same experiment name
+            from all the poolcount files and sets into 
+            a single massive 'all.poolcount' file.
+            We also add the columns 'locusId' and 'f'
+            which track if an insertion was inside a gene,
+            and if it was inside a gene, where in the gene
+            was it inserted? If it wasn't inserted in a gene,
+            both are the empty string ''.
+        close_filehandles
+            We simply close all the fileHandles of all the 
+            poolcount files, including the newly written all.poolcount.
+        write_exps
+            We rewrite the experiments file with only the 
+            experiments we use and with the updated values.
+            Values were updated in the function 'clean_exps'.
+            We write the file to 'exps' in 'outdir'
+        copy_pool_genes_strain_usage
+            We copy the files 'poolfile' and 'genesfile' to 
+            'outdir' in preparation for the analysis part
+            of the program.
+        Then we return the variables that are useful for 
+        the analysis part of the program
     """
 
     # Initialize dict which contains all important variables
@@ -72,7 +241,7 @@ def main_run(config_fp, inp_arg_list, this_file_dir):
     all_vars = find_set_files(all_vars)
 
     # Look for set files that are not in the metadata
-    metadata_set_file_check(all_vars)
+    # metadata_set_file_check(all_vars)
 
     # Build and check list of experiments for each set
     all_vars = build_and_check_sets_experiments(all_vars)
@@ -96,7 +265,7 @@ def main_run(config_fp, inp_arg_list, this_file_dir):
     all_vars = combine_data_rows(all_vars)
 
     # Write to all poolcounts and close set file handles
-    write_to_all_poolcount_and_close_filehandles(all_vars)
+    close_filehandles(all_vars)
 
     # Write outdir/exps with only the exps for these sets and with
     # non-empty Description
@@ -106,16 +275,40 @@ def main_run(config_fp, inp_arg_list, this_file_dir):
     copy_pool_genes_strain_usage(all_vars)
 
     # Running the R command
-    run_R_cmd(all_vars)
+    #run_R_cmd(all_vars)
 
     # Printing vars
     # del all_vars['setFh']
     # logging.info("All Vars: \n" + json.dumps(all_vars, indent=4))
 
-    return all_vars
+    ret_d = {
+            "outdir": all_vars["outdir"],
+            "FEBA_dir": all_vars["FEBA_dir"],
+            "org": all_vars["org"],
+            "bsPy_cfg_fp": all_vars["bsPy_cfg_fp"] 
+    }
+
+
+    return ret_d
 
 
 def get_args(all_vars, inp_arg_list):
+    """
+    TD:
+        We should change this to just be passed as a dict
+        within KBase.
+
+    Description:
+        We use python's argparser library to get the arguments
+        for all these values as though they are command line arguments.
+        We add these variables to all_vars:
+        "org", "indir", "metadir", "exps", "genesfile", "poolfile", 
+        "outdir", "sets_dir","sets", "noR", "test", "feba_strain_usage"
+        Note that the following are booleans (if True) or None (if False)
+        "noR", "test", "feba_strain_usage" (the last three from above).
+        The rest of the values are strings.
+    """
+
     parser = argparse.ArgumentParser(
         usage=all_vars["usage_str"], description=all_vars["usage_str"]
     )
@@ -134,7 +327,7 @@ def get_args(all_vars, inp_arg_list):
     parser.add_argument("-feba_strain_usage", action="store_const", const="1",
             default="0")
     # Sets should all be in -sets_dir
-    # Sets should just be the set names without extensions
+    # Sets are the set names without extensions
     parser.add_argument("-sets", type=str, nargs="+")
 
 
@@ -167,30 +360,14 @@ def get_args(all_vars, inp_arg_list):
     return all_vars
 
 
-def run_R_cmd(all_vars):
-    RscriptFP = os.path.join(all_vars['this_dir'], all_vars['R_path'])
-    # Rscript is used on OSX at least to run R scripts
-    R_exec_path = "Rscript"
-    # RscriptFP is location of file, org is organism, outdir is data dir
-    Rcmds = [R_exec_path, RscriptFP, all_vars['org'], all_vars['outdir'], 
-            all_vars['FEBA_dir']]
-    R_op_path = os.path.join(all_vars["outdir"], ".FEBA.success")
-    if "noR" in all_vars and all_vars["noR"] is True:
-        logging.info("Skipping the R step: {}\n".format(" ".join(Rcmds)))
-    else:
-        logging.info("Running R: {}\n".format(Rcmds))
-        if os.path.isfile(R_op_path):
-            os.unlink(R_op_path)
-        log_output_fp = os.path.join(all_vars['outdir'], "log")
-        f = open(log_output_fp, "w")
-        subprocess.call(Rcmds, stdout=f)
-        f.close()
-        if not os.path.exists(R_op_path):
-            raise Exception("R failed, see outdir log\n")
-        logging.info("Succesfully ran R")
-
 
 def copy_pool_genes_strain_usage(all_vars):
+    """
+    Description:
+        We copy the files 'poolfile' and 'genesfile' to 
+        'outdir' in preparation for the analysis part
+        of the program.
+    """
     # Write to outdir/pool, outdir/genes
     outdir = all_vars["outdir"]
     indir = all_vars["indir"]
@@ -220,7 +397,17 @@ def copy_pool_genes_strain_usage(all_vars):
 
 
 def write_exps(all_vars):
+    """
+    Description:
+        We rewrite the experiments file with only the 
+        experiments we use and with the updated values.
+        Values were updated in the function 'clean_exps'.
+        We write the file to 'exps' in 'outdir'
+    """
     # Below write the columns in a reasonable order
+    # The reason we take expCols from expsfile instead of
+    # from the keys from the first dict in the 'exps' var 
+    # list is in case there are no lines.
     expCols = read_column_names(all_vars["expsfile"])
     expsout = os.path.join(all_vars["outdir"], "exps")
 
@@ -232,7 +419,12 @@ def write_exps(all_vars):
             g.write("\t".join(out) + "\n")
     logging.info("Wrote {} experiments to {}".format(len(all_vars["exps"]), expsout))
 
-def write_to_all_poolcount_and_close_filehandles(all_vars):
+def close_filehandles(all_vars):
+    """
+    Description:
+        We simply close all the fileHandles of all the 
+        poolcount files, including the newly written all.poolcount.
+    """
 
     all_vars['all_poolcount_fH'].close()
     logging.info(
@@ -253,27 +445,57 @@ def write_to_all_poolcount_and_close_filehandles(all_vars):
 
 
 def combine_data_rows(all_vars):
-    # We read all the data rows from poolcount files, 
-    # combining them and checking that
-    # the metadata is correct. Name each field SetName.Index
-    # Only include items that are in the experiment list
+    """
+    Description:
+        This is where the majority of the computation occurs
+        within this part of the program.
+        We go through each set from the 'setFh' dict,
+        which maps set name to a list of file handles (and file
+        lengths) that relate to that set.
+        Then we iterate over every line of the poolcount
+        files, all of which should be the same length,
+        and add the info from all of them into 
+        a single line of all.poolcount. So we end
+        adding lines to all.poolcount when we reach
+        the last line of the poolcount files.
+        Simply combine the same experiment name
+        from all the poolcount files and sets into 
+        a single massive 'all.poolcount' file.
+        We also add the columns 'locusId' and 'f'
+        which track if an insertion was inside a gene,
+        and if it was inside a gene, where in the gene
+        was it inserted? If it wasn't inserted in a gene,
+        both are the empty string ''.
+
+    SubRoutines:
+        LocationToGene:
+            Returns [locusId (str), f (float)]
+                where locusId and f are empty string '' if the insertion
+                did not hit a gene, and they are the corresponding
+                values if it did hit a gene.
+
+    """
     
     # Not sure what below code would do
     #namesUsed = {(x["SetName"] + "." + x["Index"]): 1 for x in all_vars["exps"]}
 
-    # Below is 1 if reached EOF in 1st file
-    lastline = 0
+    # Below is True if reached EOF in 1st file
+    lastline = False
 
     # nLine refers to the line num
     nLine = 0
 
     nInGene = 0
 
-    while lastline == 0:
+    while not lastline:
+        # nFile keeps track of total fileHandles passed through
         nFile = 0
+        # counts keeps SetName.Index -> list of counts
         counts = {}
         nLine += 1
         metavalues = []
+        # setFh dict mapping setName to list of <FileHandle, FileLength (int)>
+        # relating to that set
         for k in all_vars["setFh"].keys():
             s, fhlist = k, all_vars["setFh"][k]
 
@@ -288,9 +510,9 @@ def combine_data_rows(all_vars):
                 line = file_handle.readline()
                 if line == "":
                     if nFile == 1:
-                        lastline = 1
+                        lastline = True
                     else:
-                        if not (lastline == 1):
+                        if not lastline:
                             logging.info("Failed fhlist:")
                             print(fhlist)
                             raise Exception("Unexpected EOF in file for " + s)
@@ -326,6 +548,7 @@ def combine_data_rows(all_vars):
                 for i in range(len(indexes)):
                     index = indexes[i]
                     count = F[all_vars["nmeta"] + i]
+                    # We check if the count is an integer as expected
                     if not re.search(r"^\d+$", count):
                         raise Exception(
                             "Not a count field: "
@@ -337,17 +560,18 @@ def combine_data_rows(all_vars):
                         counts[new_key] += int(count)
                     else:
                         counts[new_key] = int(count)
-        if lastline == 0:
+        if not lastline:
             countsUsed = []
             for exp in all_vars["exps"]:
                 key = exp["SetName"] + "." + exp["Index"]
                 cu_var = 0 if key not in counts else counts[key]
                 countsUsed.append(cu_var)
-
             try:
                 newpos = int(metavalues[all_vars["POS"]])
             except ValueError:
                 newpos = ''
+            # Note locusId and f are both empty string if insertion doesn't hit 
+            # a gene.
             locusId, f = LocationToGene(
                 metavalues[all_vars["SCAFFOLD"]],
                 newpos,
@@ -363,7 +587,7 @@ def combine_data_rows(all_vars):
 
     if nInGene == 0:
         raise Exception(
-            "\n No insertions in genes. Please check that "
+            "\n No insertionsi found in genes. Please check that "
             "{} contains genes, {} contains strains, ".format(
                 all_vars["genesfile"], all_vars["poolfile"]
             )
@@ -375,6 +599,17 @@ def combine_data_rows(all_vars):
 
 
 def init_all_poolcount_str(all_vars):
+    """
+    Description:
+        We add the variables "all_poolcount_fp" and
+        "all_poolcount_fH" to all_vars.
+        We initialize the all_poolcount file and write
+        the headers, which are:
+        barcode, rcbarcode, scaffold, strand, pos, locusId, f
+        'all_poolcount_fH' contains the file handle for
+        all.poolcount, and it already will have had the header
+        written
+    """
     allfile = os.path.join(all_vars["outdir"], "all.poolcount")
     all_vars["all_poolcount_fp"] = allfile
     allfields = "barcode rcbarcode scaffold strand pos locusId f".split(" ")
@@ -389,18 +624,46 @@ def init_all_poolcount_str(all_vars):
 
 
 def map_strains_to_genes_open_filehandles(all_vars):
-    # Here we map strains to genes,
-    # combine counts, read each file in parallel
+    """
+    all_vars:
+        nmeta: Number of metadata columns (?)
+    Description:
+        First we get the number of preliminary metadata columns
+        and call it 'nmeta' and store it.
+        Then we create two dicts: 'setFh' and 'setIndex',
+        which we both store in all_vars.
+        'setFh' (python dict): 
+            Maps setName -> list<list<Filehandle, Row num (int)>>
+            Goes from setName to a list, whose length is the
+            number of poolcount files relating to that set, 
+            with each element being a list with two elements:
+            the first is the filehandle for that poolcount file,
+            the second is the length of that file.
+        'setIndex' (python dict):
+            Maps setName -> list<Indexes (str)>
+            For each setName, if the file we are looking
+            at is the first for this set, then we store the list of 
+            indexes (all column names after the metadata) in
+            this dict. Otherwise, if we've already seen a poolcount
+            file for this set, then we compare the existing indeces
+            and double check that they match the first one.
+            If they don't, then we raise an Exception because
+            they should match. We also do a redundant comparison
+            to exps SetName which should be removed.
+    TD: Eventually might be better to convert this into pandas
+
+    """
+
+    meta = "barcode rcbarcode scaffold strand pos".split(" ")
+    nmeta = len(meta)
+    all_vars['nmeta'] = nmeta
+
 
     # Below is set to list of file handles reading counts for that set
-    # In python we just use file paths
     setFh = {}
     # Below is set to list of count fields, may be more than is in the
     # counts file
     setIndex = {}
-    meta = "barcode rcbarcode scaffold strand pos".split(" ")
-    nmeta = len(meta)
-    all_vars['nmeta'] = nmeta
 
     # We create this to have index loc for below keys within files
     x = ["BARCODE", "RCBARCODE", "SCAFFOLD", "STRAND", "POS"]
@@ -489,6 +752,19 @@ def map_strains_to_genes_open_filehandles(all_vars):
 
 
 def build_and_check_sets_experiments(all_vars):
+    """
+
+    Description:
+        First we create a variable called 'setExps',
+        which is a dict that goes from set name
+        to a list of experiments belonging
+        to that set (set is equivalent to 'lane').
+        We then double check that every experiment
+        name is unique.
+        Then we print to the user the total number
+        of experiments, total number of genes,
+        and total number of sets.
+    """
     # Build list of experiments for each set
     setExps = {}
     for exp in all_vars["exps"]:
@@ -516,8 +792,10 @@ def build_and_check_sets_experiments(all_vars):
     all_vars["setExps"] = setExps
 
     # Print Info:
-    test_or_proc_str = "Test found" if "test" in all_vars and \
-            all_vars["test"] is not None else "Processing"
+    test_or_proc_str = "Test found: " if "test" in all_vars and \
+            all_vars["test"] is not None else "Processing: "
+
+
     logging.info(
         "{} {} experiments, {} genes, {} sets for {}\n".format(
             test_or_proc_str,
@@ -532,6 +810,12 @@ def build_and_check_sets_experiments(all_vars):
 
 
 def metadata_set_file_check(all_vars):
+    """
+    Description:
+        If prespec_sets is not set to True, then
+        we check if each poolcount file is in 'pcToSet' dict
+        (why?)
+    """
     # prespec sets is a boolean
     if not all_vars["prespec_sets"]:
         for pcfile in all_vars["pcfiles"]:
@@ -543,20 +827,18 @@ def metadata_set_file_check(all_vars):
 
 def find_set_files(all_vars):
     """
-    Here we take sets and convert them to ".poolcount" files
-
-    we use sets dir and just add set_name to .poolcount
-    We create a number of dicts that have relational info 
-    between set names and set files
+    Description:
+        Here we take sets and convert them to ".poolcount" files
+        we use sets dir and just add set_name to .poolcount
+        Then we create two dicts:
+            1. setFiles: maps set names to poolcount filepaths
+            2. pcToSet: maps poolcount filepaths to set names (why?)
     """
     
     # Below set to list of prefixes for poolcount files
     setFiles = {}
     # Below pcFile to set
     pcToSet = {}
-
-    #Unknown use:
-    sets_dict = {}
 
     # We are assuming there is only one poolcount file with setname
     # + ".poolcount"
@@ -565,18 +847,24 @@ def find_set_files(all_vars):
         pcfp = os.path.join(all_vars['sets_dir'], fn)
         setFiles[s] = [pcfp]
         pcToSet[pcfp] = s
-        sets_dict[s] = 1
 
     all_vars["setFiles"] = setFiles
     all_vars["pcToSet"] = pcToSet
-    all_vars["sets_dict"] = sets_dict
 
     return all_vars
 
 
 def set_up_gene_vars(all_vars):
     """
-
+    Description:
+        We add the variables 'genes', which is the list
+        resulting from the function 'read_table', i.e.
+        a list of dicts, one per row, with keys being 
+        column names pointing to the values.
+        We also add the variable 'genesSorted', which is 
+        a dict of scaffoldIds pointing to a sorted
+        list of genes by their beginning position
+        within the scaffold.
     """
     genes = read_table(
         all_vars["genesfile"],
@@ -604,6 +892,20 @@ def set_up_gene_vars(all_vars):
 
 
 def check_unknown_media_and_compounds(all_vars):
+    """
+    Args:
+        all_vars:
+            'exps': list<dict>, a 'read' table, with one dict per row
+                    of 'exps' file, dict has columns pointing to values
+                    at that row.
+                    Cols must include "Index", "SetName"
+
+    Description:
+        We keep track of unknown Media and compounds,
+        we don't raise Errors if these exist, only
+        we keep track of them and create variables
+        "noMedia", "unknownMedia", and "unknownCompound".
+    """
     unknownMedia = {}
     unknownCompound = {}
     noMedia = []
@@ -622,7 +924,7 @@ def check_unknown_media_and_compounds(all_vars):
                 )
                 exp["Drop"] = "TRUE"
             elif drop.upper() == "NA":
-                exp["Drop"] = ""
+                exp["Drop"] = "" # Why not FALSE
             elif drop.upper() != "FALSE":
                 logging.warning(
                     "Unknown drop code {} for {} {}\n".format(
@@ -702,8 +1004,15 @@ def check_unknown_media_and_compounds(all_vars):
 
 def clean_exps(all_vars):
     """
-    We remove experiments which don't have good entries in the
-        experiments file
+    Args:
+        all_vars:
+            exps: (list of dicts, one per row, header name pointing to value)
+
+    Description:
+        We remove experiments (rows from exps file) which don't have 
+        good entries in the experiments file. Experiments that 
+        aren't good enough have, for example, no Description, 
+        or their 'SetName' isn't part of the input sets. 
     """
     # We get the chars for an alpha symbol
     alpha = chr(206) + chr(177)
@@ -730,7 +1039,11 @@ def clean_exps(all_vars):
     all_vars["exps"] = new_exp
     all_vars['prespec_sets'] = len(all_vars["sets"]) > 0
 
-    # In KBase we will probably go into this first if statement
+    if not all_vars['prespec_sets']:
+        raise Exception("Running on KBase and there are no poolcount files."
+                        " Cannot run.")
+
+    # In KBase we will almost always go into this first if statement
     if all_vars['prespec_sets']:
 
         # ignore experiments not in pre-specified sets
@@ -743,13 +1056,22 @@ def clean_exps(all_vars):
             if exp["SetName"] in sets_dict:
                 new_exps.append(exp)
         if len(new_exps) == 0:
+            logging.warning("No overlap between experiment set names and "
+                            "PoolCount setNames. Printing both:")
+            logging.warning("Experiments: ")
+            logging.warning(all_vars["exps"])
+            logging.warning("PoolCount Sets:")
+            logging.warning(all_vars["sets"])
             raise Exception(
                 "No experiments in specified sets " 
                 "having Description filled out)\n"
                 "Check your Experiments File and "
-                "specifically the Description for"
+                "specifically the SetName column for"
                 " the sets (poolcount files) you "
-                "are testing."
+                "are testing. "
+                "Make sure the PoolCount file's (set's)"
+                " name is exactly the same as the setNames"
+                " in the Experiments file."
             )
         else:
             all_vars["exps"] = new_exps
@@ -800,14 +1122,46 @@ def run_load_compounds_load_media(all_vars):
                 where compound_l list<compound (str), concentration (str), units (str)>
                 e.g. [Ammonium chloride, 0.25, g/L]
         mixAttr: (d)
-            attribute (str) -> value (str) e.g.
-                Description -> Defined minimal media for soil and groundwater bacteria with glucose and MES buffer
-                or
-                Minimal -> TRUE
+            media_name (str) -> attr_d (d)
+                attribute (str) -> value (str) e.g.
+                    Description -> Defined minimal media for soil and groundwater 
+                                    bacteria with glucose and MES buffer
+                    or
+                    Minimal -> TRUE
         compounds: (d)
             compound_name -> [compound_name, CAS (str), MW (str)]
         synonyms: (d)
             synonym_name (str) -> compound_name (str)
+
+    Vars:
+        LoadMediaResultsDict (python dict with keys:):
+            "media_dict": media,
+            "mix_dict": mix,
+            "mixAttr": mixAttr,
+            "compounds_dict": compounds,
+            "synonyms_dict": synonyms
+
+        
+
+    Description:
+        First, we use the function 'LoadCompounds' 
+        to create dicts 'compounds_dict' and 'synonyms_dict'.
+        Where 'compound_dict' maps a compound name to a list
+        containing its name, its CAS (ID), and its molecular weight,
+        and synonyms dict maps all other names of compounds
+        to the original name you would find in 'compound_dict'.
+        Then we run the function LoadMedia, which gives us
+        three new dicts: "media_dict", "mix_dict", "mixAttr". 
+        In both "media_dict" and "mix_dict", the keys are
+        the names of the media or mix (str), and the values
+        are lists of lists. Where the sublists contain
+        compounds with amounts and units. In other words
+        the two dicts contain the information for given
+        media and mixes. "mixAttr", on the other hand,
+        has keys that are the names of mixes, and those
+        point to dicts with attributes and values.
+        We add all of these new dicts to all_vars,
+
     """
 
     # Setting up the variables for LoadCompounds and LoadMedia
@@ -844,39 +1198,60 @@ def run_load_compounds_load_media(all_vars):
 
 def check_input_dirs(all_vars):
     """
-    In this function we check existence of dirs and files- but not set files
+    Args:
+        all_vars (python dict): Must contain keys:
+            indir: (str path to directory)
+            metadir: (str path to directory)
 
-    We check that indir, metadir and outdir exist as directories.
-    We check that FEBA_Barseq.tsv, genes.GC, and pool.n10 are in
-    indir. We check that the poolfile has the right columns.
-    We check that the R_Path is a real file.
+    Returns:
+        Adds the following args to all_vars:
+            expsfile
+            genesfile
+            poolfile
+
+    Description:
+        In this function we check existence of dirs and files- 
+        We check that indir, metadir and outdir exist as directories.
+        We check that FEBA_Barseq.tsv, genes.GC, and pool.n10 are in
+        indir. We check that the poolfile has the right columns.
+        Should we check existence of all 'poolcount' files?
+        We add the variables 'expsfile', 'genesfile' and 'poolfile'
+        to all_vars
     """
     # Here we find experiments file "expsfile" called FEBA_Barseq.tsv
     # in the indir. We also need a metadir directory.
 
     if not os.path.isdir(all_vars["indir"]):
         raise Exception("No such directory: {}".format(all_vars["indir"]))
+
+    indir_files = os.listdir(all_vars["indir"])
+    for x in ["FEBA_Barseq.tsv", "genes.GC"]:
+        if x not in indir_files:
+            raise Exception(f"File {x} missing from indir. Current files "
+                            " in indir:\n" + ", ".join(indir_files))
+
+    all_vars["expsfile"] = os.path.join(all_vars["indir"], "FEBA_Barseq.tsv")
+    all_vars["genesfile"] = os.path.join(all_vars["indir"], "genes.GC")
+    if "pool.n10" not in indir_files:
+        if "pool" not in indir_files:
+            raise Exception("Neither 'pool.n10' nor 'pool' found "
+                            " in indir files. Current files "
+                            " in indir:\n" + ", ".join(indir_files))
+        else:
+            all_vars["poolfile"] = os.path.join(all_vars["indir"], "pool")
+    else:
+        all_vars["poolfile"] = os.path.join(all_vars["indir"], "pool.n10")
+
+
     if not os.path.isdir(all_vars["metadir"]):
         raise Exception("No such directory: {}".format(all_vars["metadir"]))
-
-    # Experiments file check
-    all_vars["expsfile"] = os.path.join(all_vars["indir"], "FEBA_Barseq.tsv")
-    if not os.path.isfile(all_vars["expsfile"]):
-        raise Exception("No such experiments file: {}".format(all_vars["expsfile"]))
-    # Genes file check
-    all_vars["genesfile"] = os.path.join(all_vars["indir"], "genes.GC")
-    if not os.path.isfile(all_vars["genesfile"]):
-        raise Exception("No such genes file: {}".format(all_vars["genesfile"]))
-    # Pool file check
-    if all_vars["poolfile"] == None:
-        all_vars["poolfile"] = os.path.join(all_vars["indir"], "pool.n10")
-        if not os.path.isfile(all_vars["poolfile"]):
-            all_vars["poolfile"] = os.path.join(all_vars["indir"], "pool")
-        if not os.path.isfile(all_vars["poolfile"]):
-            raise Exception("No poolfile {} or {}.n10".format(all_vars["poolfile"]))
     else:
-        if not os.path.isfile(all_vars["poolfile"]):
-            raise Exception("No such poolfile {}".format(all_vars["poolfile"]))
+        metadir_files = os.listdir(all_vars["metadir"])
+        for x in []:
+            if x not in metadir_files:
+                raise Exception(f"File {x} missing from metadir. Current "
+                                " files in metadir:\n" + ", ".join(metadir_files))
+
     # Checking columns of poolfile
     poolcols = read_col_names(all_vars["poolfile"])
     for col in ["barcode", "rcbarcode", "scaffold", "strand", "pos", "n", "nTot"]:
@@ -889,26 +1264,26 @@ def check_input_dirs(all_vars):
     if not os.path.isdir(all_vars["outdir"]):
         raise Exception("No such directory: {}".format(all_vars["outdir"]))
 
-    # Checking R script
-    if (not os.path.isfile(all_vars["R_path"])) and (all_vars["noR"] is not None):
-        raise Exception("No such script file: {}".format(all_vars["Rscript"]))
-
     return all_vars
 
 
 def read_col_names(pool_fp):
     with open(pool_fp, "r") as f:
-        file_str = f.read()
-        split_l = file_str.split("\n")
-        first_line = split_l[0]
-        if len(first_line) == 0:
-            first_line = split_l[1]
-            logging.warning("FIRST LINE OF POOL FILE EMPTY")
+        first_line = f.readline()
+        if first_line == "":
+            raise Exception(f"First line of pool file {pool_fp} is empty.")
     first_row = first_line.split("\t")
     return first_row
 
 
 def get_config_dict(config_fp, all_vars, this_file_dir):
+    """
+    Description:
+        We use the 'json' library to get the config loaded
+        as a python dict. Also, we add the variables 
+        'R_path', 'FEBA_dir' and 'this_dir' to all_vars.
+        The config file is 'barseqr_config_dict.json'
+    """
     with open(config_fp, "r") as f:
         config_dict = json.loads(f.read())
 
@@ -925,6 +1300,14 @@ def get_config_dict(config_fp, all_vars, this_file_dir):
 
 
 def get_usage_str(config_dict, all_vars):
+    """
+    Description:
+        We add the variable "usage_str"
+        to all_vars. We get the usage string
+        from the file under the 'usage_txt_fn'
+        key in the config dict. The config file
+        must be in the same directory as 'this_dir'
+    """
     iv = config_dict["init_vars"]
     usage_fp = os.path.join(all_vars["this_dir"], iv["usage_txt_fn"])
     with open(usage_fp, "r") as f:
@@ -935,6 +1318,31 @@ def get_usage_str(config_dict, all_vars):
 
 def print_vars(all_vars):
     logging.info(json.dumps(all_vars, indent=4))
+
+
+
+
+def runBarSeqPy(all_vars):
+    """
+    Args:
+    Description:
+        We run the analysis part of the program
+    """
+    if 'bsPy_cfg_fp' not in all_vars:
+        raise Exception("No BarSeqPy config indicated.")
+
+    RunFEBA(all_vars['org'], 
+            all_vars['outdir'], 
+            all_vars['FEBA_dir'], 
+            1,
+            all_vars['bsPy_cfg_f'],
+            debug_bool=False, breakpoints_bool=False,
+            meta_ix=7)
+
+
+
+
+
 
 
 
@@ -958,8 +1366,46 @@ def test():
         "SB2B_ML5_set2",
         "SB2B_ML5_set3"
     ]
-    main_run(config_fp, inp_arg_list)
+    prepare_all_poolcount_etc(config_fp, inp_arg_list)
 
 
 if __name__ == "__main__":
     test()
+
+
+# Deprecated:
+def run_R_cmd(all_vars):
+    """ This function calls the FEBA R script entry point 'RunFEBA.R'
+
+        all_vars:
+            outdir: (str) path
+                dir must contain 'all.poolcount', 'exps'
+                'genes' 'pool'    files
+            noR: bool
+            FEBA_dir: (str) path
+            org: str
+
+    """
+    RscriptFP = os.path.join(all_vars['this_dir'], all_vars['R_path'])
+    # Rscript is used on to run R scripts
+    R_exec_path = "Rscript"
+    # RscriptFP is location of file, org is organism, outdir is data dir
+    Rcmds = [R_exec_path, RscriptFP, all_vars['org'], all_vars['outdir'], 
+            all_vars['FEBA_dir']]
+    R_op_path = os.path.join(all_vars["outdir"], ".FEBA.success")
+    if "noR" in all_vars and all_vars["noR"] is True:
+        logging.info("Skipping the R step: {}\n".format(" ".join(Rcmds)))
+    else:
+        logging.info("Running R: {}\n".format(Rcmds))
+        if os.path.isfile(R_op_path):
+            os.unlink(R_op_path)
+        log_output_fp = os.path.join(all_vars['outdir'], "log")
+        f = open(log_output_fp, "w")
+        subprocess.call(Rcmds, stdout=f)
+        f.close()
+        if not os.path.exists(R_op_path):
+            logging.critical(f"R output was not written at {R_op_path}")
+            #raise Exception("R failed, see outdir log\n")
+        else:
+            logging.info("Succesfully ran R")
+

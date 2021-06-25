@@ -19,7 +19,12 @@ RunFEBA = function(args = commandArgs(trailingOnly=TRUE)) {
         # Note: commandArgs is a built-in function that gets command line args
         # Note: data_dir must contain files all.poolcount, genes, exps, pool
         # Note: FEBAdir must contain /lib/FEBA.R, /lib/desc_short_rules
-        #       
+        # 
+        # When running from Kbase App barseqR:
+        # dir: 'workdir/outdir'
+        # FEBAdir:
+        #
+
 	if (length(args) != 3) stop(usage);
 	org = args[1];
 	dir = args[2]
@@ -31,6 +36,8 @@ RunFEBA = function(args = commandArgs(trailingOnly=TRUE)) {
 	expsfile = paste(dir,"/exps",sep="");
 	poolfile = paste(dir,"/pool",sep="");
 	FEBA_R = paste(FEBAdir,"/lib/FEBA.R",sep="");
+        kb_test_exps_fp = paste(dir,"/KBtestexps",sep="");
+        kb_test_all_fp = paste(dir,"/KBtest_all",sep="");
 
 	# mode 4 means read permission
 	if (file.access(allfile, mode=4) != 0) stop("Cannot read all file: ",allfile);
@@ -72,6 +79,7 @@ RunFEBA = function(args = commandArgs(trailingOnly=TRUE)) {
 	exps$name = paste(exps$SetName,exps$Index,sep=".");
         # applyRules function in file lib/FEBA.R
 	exps$short = applyRules(rules, exps$Description);
+
         # Below creates a vector 1, 2, 3 ..., 7
 	metacol = 1:7;
         
@@ -110,12 +118,22 @@ RunFEBA = function(args = commandArgs(trailingOnly=TRUE)) {
 
 	options(width=100);
 
+
+        # DEBUG: Writing Table out to file.
+        write.table(exps, kb_test_exps_fp, append = FALSE, sep = " ", dec = ".",
+            row.names = TRUE, col.names = TRUE)
+
+        write.table(all, kb_test_all_fp, append = FALSE, sep = " ", dec = ".",
+            row.names = TRUE, col.names = TRUE)
+
         
         # 'exps' and 'all' and 'genes' come from read.delim on files. All are dataframes
         # strainsUsed, genesUsed, genesUsed12 are all optional
 	fit = FEBA_Fit(exps, all, genes, dir=dir,
-		strainsUsed=strainsUsed, genesUsed=genesUsed, genesUsed12=genesUsed12);
-	FEBA_Save_Tables(fit, genes, org, expsU=exps, dir=dir, FEBAdir=FEBAdir);
+		strainsUsed=strainsUsed, genesUsed=genesUsed, 
+                genesUsed12=genesUsed12,
+                minSampleReads=0);
+	# FEBA_Save_Tables(fit, genes, org, expsU=exps, dir=dir, FEBAdir=FEBAdir);
 	write(date(), paste(dir,"/.FEBA.success", sep="")); # report success to BarSeqR.pl
 }
 

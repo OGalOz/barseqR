@@ -4,7 +4,7 @@ import logging
 import os
 import sys
 from Bio import SeqIO
-from Util.genbank_to_gene_table import convert_genbank_to_gene_table
+from Util.genbank_to_gene_table import genbank_and_genome_fna_to_gene_table 
 
 # Both vp and d_d are dicts - validate_params and download_dict, respectively.
 def download_files(vp, d_d):
@@ -34,6 +34,7 @@ def download_files(vp, d_d):
            "poolfile_path": poolfile_path,
            "gene_table_fp": gene_table_fp,
            "exps_file": exps_file
+           "scratch_dir": path to scratch directory
 
     """
     logging.info("DOWNLOADING FILES-------------------")
@@ -64,6 +65,10 @@ def download_files(vp, d_d):
 
     genbank_fp = GenomeToGenbankResult['genbank_file']['file_path']
 
+    genome_fna_fp = get_fa_from_scratch(d_d["scratch_dir"])
+
+    if genome_fna_fp is None:
+        raise Exception("GFU Genome To Genbank did not download Assembly file in expected Manner.")
 
     # Download pool file and get related info. Name it pool.n10, place in indir
     # Ensure related to genome through organism_name
@@ -78,7 +83,11 @@ def download_files(vp, d_d):
 
     # Convert genbank file to genes table, name it indir/genes.GC
     gt_cfg_dict = get_gene_table_config_dict(genbank_fp)
-    convert_genbank_to_gene_table(genbank_fp, d_d['gene_table_fp'], gt_cfg_dict)
+    genbank_and_genome_fna_to_gene_table(genbank_fp, 
+                                        genome_fna_fp, 
+                                        d_d['gene_table_fp'])
+
+    #convert_genbank_to_gene_table(genbank_fp, d_d['gene_table_fp'], gt_cfg_dict)
 
 
     # Download Experiments File, name it FEBA_Barseq.TSV, place in scratch/indir
@@ -88,6 +97,7 @@ def download_files(vp, d_d):
 
     # Download Set Files
     # set_names_list just contains the names of the sets without extensions
+    # set_fps_list is a list of set filepaths
     set_names_list, set_fps_list = download_sets_from_refs(vp['sets_refs'], dfu,
                                                             organism_name,
                                                             sets_dir)
@@ -308,3 +318,24 @@ def download_sample_set_to_file(smpl_s, smpl_set_fp, exps_ref, dfu):
 
     return smpl_st_fp
 
+
+def get_fa_from_scratch(scratch_dir):
+    """
+    Careful... May not work in the Future
+    Inputs:
+        scratch_dir: (str) Path to work dir/ tmp etc..
+    Outputs:
+        FNA fp: (str) Automatic download through GenbankToGenome
+    """
+    
+    fna_fp = None
+    scratch_files = os.listdir(scratch_dir)
+    for f in scratch_files:
+        if f[-2:] == "fa":
+            fna_fp = os.path.join(scratch_dir, f)
+            break
+    
+    if fna_fp is None:
+        logging.warning("Could not find Assembly FNA file in scratch (work) dir")
+
+    return fna_fp

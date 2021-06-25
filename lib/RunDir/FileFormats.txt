@@ -12,7 +12,9 @@ Experiments Files: (e.g. FEBA_BarSeq.tsv) - One per run
     General Description:
         A TSV file which describes an experiment.
     Meaning of each used value:
-        SetName
+        SetName - This is very important: The SetName field needs to match the SetName
+                  of the PoolCount file. The SetName of the PoolCount file is the
+                  File Name without the extension.
 
 
 Genes Table: (e.g. genes.GC) - One per run

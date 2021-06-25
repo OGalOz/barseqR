@@ -31,5 +31,5 @@ def FEBA_Fit(expsUsed, all_tbl, genes,
             minSampleReads = getenv_numeric_or_default("FEBA_MIN_SAMPLE_READS", 200*1000),
             debug=FALSE, computeCofit=TRUE,
             dir="."):
-
-    
+    # This is incomplete
+    return None 

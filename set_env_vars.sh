@@ -8,4 +8,5 @@ tmp_dir=$PWD/test_local/workdir/tmp/
 ui_dir=$PWD/ui/narrative/methods/run_barseqR/
 uspec=$PWD/ui/narrative/methods/run_barseqR/spec.json
 udisp=$PWD/ui/narrative/methods/run_barseqR/display.yaml
+Rdir=$PWD/lib/RunDir/R_dir
 

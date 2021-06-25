@@ -1,0 +1,69 @@
+1. fit_quality.tsv:
+    The quality dataframe prepared in analysis2
+2. fit_genes.tab:
+   The genes.GC dataframe with an extra column 'used' which contains
+    True or False whether or not this gene was used in the analysis.
+3. fit_logratios_unnormalized.tab:
+   The 'lr' table with the extra columns of locusId, sysName and description,
+    all the values are the logratios (unnormalized), which are floats,
+    per experiment and over the locusIds (locusIds are rows).
+4. fit_logratios_unnormalized_naive.tab:
+   The 'lrNaive' table with the extra columns of locusId, sysName and description,
+    all the values are the naive logratios (unnormalized), which are floats,
+    per experiment and over the locusIds (locusIds are rows).
+5. fit_logratios.tab:
+   The 'lrn' table with the extra columns of locusId, sysName and description,
+    all the values are the normalized logratios, which are floats,
+    per experiment and over the locusIds (locusIds are rows).
+6. fit_logratios_half1.tab:
+   The 'lrn1' table with the extra columns of locusId, sysName and description,
+    all the values are the normalized logratios inserted into the first
+    half of the gene (which are floats,
+    per experiment and over the locusIds (locusIds are rows)).
+7. fit_logratios_half2.tab:
+   The 'lrn2' table with the extra columns of locusId, sysName and description,
+    all the values are the normalized logratios inserted into the first
+    half of the gene (which are floats,
+    per experiment and over the locusIds (locusIds are rows)).
+8. fit_logratios_good.tab:
+    We output the normalized log ratios on genes with a table that ONLY includes
+    the genes we ended up using and the experiments we ended up using. (How 
+    is this different from fit_logratios?)
+9. gene_counts.tab:
+    The 'tot' dataframe along with the genes, 'tot' is the total
+    reads per gene.
+10. fit_t.tab:
+    The 't' dataframe along with the genes info (locusId, sysName, desc)
+11. fit_standard_error_obs.tab:
+    The 'se' dataframe along with the genes info (locusId, sysName, desc)
+12. fit_standard_error_naive.tab:
+    The 'sdNaive' dataframe along with the genes info (locusId, sysName, desc)
+13. strain_fit.tab:
+    This might be the largest file, it's the all.poolcount file along 
+    with strain fitness for each strain and each experiment. It also
+    includes the column 'previous_index' (why?)
+14. expsUsed.tab:
+    The experiments dataframe after lightly eliminating unusable experiments. 
+15. cofit.tab:
+    The top 'n' cofit rows for each locusId where 'n' is computed in the function TopCofit
+    or given as an input to the program.
+16. specific_phenotypes.tab:
+    One row for each specific phenotype, which is a specific strain in an experiment.
+17. strong.tab:
+    We end up with a dataframe with a single row for every strong fit and t score
+    value (fit > 2, t >5), and we add other informational columns like 
+    'sysName', 'desc' (description) and 'short'. After all we have a dataframe 
+    with the following columns:
+        locusId, name (experiment name), t (t score), lrn (fitness score
+        (log ratio normalized)), sysName, desc, and short.
+18. high_fitness.tab:
+    The 'high' dataframe as it is, meaning the following columns:
+        'locusId', 'expName', 'fit', 't', 'nReads', 'nStrains', 'se', 
+        'sdNaive', 'name', 'Group', 'Condition_1', 'Concentration_1', 
+        'Units_1', 'Media', 'short_x', 'u', 'short_y', 'maxFit', 'gMean', 
+        'sysName', 'desc', 'nDetected'
+    The actual rows represent specific situations in which genes created
+    high fitness for bugs.
+19. html_info.json:
+    Contains information necessary to create the html file
+

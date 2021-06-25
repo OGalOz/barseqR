@@ -7,6 +7,10 @@ MAINTAINER KBase Developer
 # installation scripts.
 
 RUN apt-get update
+RUN apt-get install r-base -y
+RUN pip install pandas
+RUN pip install numpy
+RUN pip install scipy
 
 # -----------------------------------------
 

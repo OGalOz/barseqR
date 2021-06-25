@@ -66,27 +66,67 @@ class barseqRTest(unittest.TestCase):
         # Check returned data with
         # self.assertEqual(ret[...], ...) or other unittest methods
 
-        # Needs genome_ref, poolfile_ref, exps_ref, sets_refs (list ), 
-        # output_name
-
         # Burk 376
-        genome_ref = "58816/3/1"
+        genome_ref = "58816/34/1"
         exps_ref = "58816/9/1"
 
-        poolfile_ref = "49371/19/1"
-        sets_refs = ["49371/21/1"]
+        poolfile_ref = "58816/36/1"
+        sets_refs = ["58816/61/1"]
         output_name = "Test_1"
 
-        ret = self.serviceImpl.run_barseqR(self.ctx, 
-                                            {
-                                             'workspace_name': self.wsName,
-                                             'genome_ref': genome_ref,
-                                             'poolfile_ref': poolfile_ref,
-                                             'exps_ref': exps_ref,
-                                             'sets_refs': sets_refs,
-                                             'output_name': output_name
-                                             }
+        base_input_d = {
+         'workspace_name': self.wsName,
+         'genome_ref': genome_ref,
+         'poolfile_ref': poolfile_ref,
+         'exps_ref': exps_ref,
+         'sets_refs': sets_refs,
+         'output_name': output_name
+        }
+        
+        default_advanced_vars_d = {
+            "okControls": "False",
+            "okDay": "True",
+            "okLane": "True",
+            "drop_exps": "True",
+            "compute_cofit_bool": "True",
+            "compute_spfc_bool": "True",
+            "compute_High_bool": "True",
+            "minSampleReads" : 20000,
+            "minGenesPerScaffold" : 10,
+            "minT0Strain" : 3 ,
+            "minT0Gene" : 30,
+            "minGenesAllowed": 100,
+            "minGenesUsed12" : 100,
+            "norm_median_window": 251,
+            "min_gMed" : 50,
+            "max_mad12" : 0.5,
+            "min_cor12" : 0.1,
+            "max_gccor" : 0.2,
+            "max_adjcor" : 0.25,
+            "nTopCofit" : "",
+            "minCofitExp" : 5,
+            "Spfc_minT" : 5,
+            "Spfc_minFit" : 1.0,
+            "Spfc_percentile" : 0.95,
+            "Spfc_percentileFit" : 1.0,
+            "Spfc_minDelta" : 0.5,
+            "High_min_fit" : 4.0,
+            "High_min_t" : 5.0,
+            "High_max_se" : 2.0,
+            "High_min_reads" : 10,
+            "High_min_gMean" : 10,
+            "High_max_below" : 8,
+            "High_min_strains" : 2,
+            "High_min_strain_fraction" : 0.5,
+            "Strong_lr": 2,
+            "Strong_t": 5
+        }
 
+
+
+        ret = self.serviceImpl.run_barseqR(self.ctx, 
+                                           base_input_d.update(
+                                                default_advanced_vars_d)
                                            )
     """
     # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa

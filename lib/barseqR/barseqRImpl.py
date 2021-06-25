@@ -3,6 +3,7 @@
 import logging
 import os
 import sys
+import json
 
 from RunDir.run_barseqR import RunBarSeq
 from Util.validate import validate_params
@@ -19,7 +20,6 @@ class barseqR:
     '''
     Module Name:
     barseqR
-
     Module Description:
     A KBase module: barseqR
     '''
@@ -148,7 +148,8 @@ class barseqR:
                 "sets_dir": sets_dir,
                 "poolfile_path": poolfile_path,
                 "gene_table_fp": gene_table_fp,
-                "exps_file": exps_file
+                "exps_file": exps_file,
+                "scratch_dir": self.shared_folder
         }
         # We copy input files to proper directories.
         # vp must contain genome_ref, poolfile_ref, exps_ref, sets_refs (list)
@@ -157,12 +158,6 @@ class barseqR:
         DownloadResults = download_files(val_par, download_dict)
 
         logging.debug(json.dumps(DownloadResults, indent=2))
-
-        sys.exit(0)
-
-
-
-
 
 
         # Get args in this format:
@@ -181,8 +176,6 @@ class barseqR:
 
 
         # Returning files to user
-
-
 
         report = KBaseReport(self.callback_url)
         report_info = report.create({'report': {'objects_created':[],

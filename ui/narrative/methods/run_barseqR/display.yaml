@@ -52,6 +52,258 @@ parameters :
             The poolcount files which are outputs from the poolcount app.
         long-hint : |
             The poolcount files which are outputs from the poolcount app.
+    okControls :
+        ui-name : |
+            okControls
+        short-hint : |
+            This is set to true if we are using new version of setting control groups
+        long-hint : |
+            Refer to manual.
+    okDay :
+        ui-name : |
+            okDay
+        short-hint : |
+            Use Time0 (control) from another day on the same lane.
+        long-hint : |
+            Refer to manual.
+    okLane :
+        ui-name : |
+            okLane
+        short-hint : |
+            get the Time0 value for this experiment from another lane if the day is the same
+        long-hint : |
+            Refer to manual.
+    drop_exps :
+        ui-name : |
+            drop_exps
+        short-hint : |
+            Set this to “True” if there is a “Drop” column in the Experiments file and you want to drop the bad experiments
+        long-hint : |
+            Refer to manual.
+    compute_cofit_bool :
+        ui-name : |
+            compute_cofit_bool
+        short-hint : |
+          Compute and output the cofit and dataframe
+        long-hint : |
+            Refer to manual.
+    compute_spfc_bool :
+        ui-name : |
+            compute_spfc_bool
+        short-hint : |
+          Compute and output the Specific Phenotypes dataframe
+        long-hint : |
+            Refer to manual.
+    compute_High_bool :
+        ui-name : |
+            compute_High_bool
+        short-hint : |
+          Compute and output the High dataframe
+        long-hint : |
+            Refer to manual.
+    minSampleReads :
+        ui-name : |
+            minSampleReads
+        short-hint : |
+            What is the minimum number of total reads in a sample
+        long-hint : |
+            Refer to manual.
+    minGenesPerScaffold :
+        ui-name : |
+            minGenesPerScaffold
+        short-hint : |
+            What is the minimum number of genes in a scaffold for the scaffold to be used in the analysis
+        long-hint : |
+            Refer to manual.
+    minT0Strain :
+        ui-name : |
+            minT0Strain
+        short-hint : |
+            What is the minimum mean of reads per strain from the T0 (control) experiments
+        long-hint : |
+            Refer to manual.
+    minT0Gene :
+        ui-name : |
+            minT0Gene
+        short-hint : |
+            What is the minimum mean of a specific gene over all the Time0s
+        long-hint : |
+            Refer to manual.
+    minGenesAllowed :
+        ui-name : |
+            minGenesAllowed
+        short-hint : |
+            Minimum number of genes used for the program to continue
+        long-hint : |
+            Refer to manual.
+    minGenesUsed12 :
+        ui-name : |
+            minGenesUsed12
+        short-hint : |
+            Minimum number of genes with enough insertions on both its first and second half for the program to continue
+        long-hint : |
+            Refer to manual.
+    norm_median_window :
+        ui-name : |
+            norm_median_window
+        short-hint : |
+            Normalization window for adjacent genes in a scaffold
+        long-hint : |
+            Refer to manual.
+    min_gMed :
+        ui-name : |
+            min_gMed
+        short-hint : |
+            Used for experiment status, this defines what the lowest median of reads over all the locusIds could be for an experiment to be "OK"
+        long-hint : |
+            Refer to manual.
+    max_mad12 :
+        ui-name : |
+            max_mad12
+        short-hint : |
+            Used for experiment status, this defines the highest median for the differences between first and second half log ratios 
+        long-hint : |
+            Refer to manual.
+    min_cor12 :
+        ui-name : |
+            min_cor12
+        short-hint : |
+            Used for experiment status, this defines the lowest correlation between the first and second half log ratios for an experiment to be "OK"
+        long-hint : |
+            Refer to manual.
+    max_gccor :
+        ui-name : |
+            max_gccor
+        short-hint : |
+            Used for experiment status, this defines the highest correlation between log ratio and GC content (over all the genes)
+        long-hint : |
+            Refer to manual.
+    max_adjcor :
+        ui-name : |
+            max_adjcor
+        short-hint : |
+            Used for experiment status, this defines the highest adjacent correlation (correlation between each gene and the next one).
+        long-hint : |
+            Refer to manual.
+    nTopCofit :
+        ui-name : |
+            nTopCofit
+        short-hint : |
+            Decides how many out of the top cofitness scores to report within the dataframe.
+        long-hint : |
+            Refer to manual.
+    minCofitExp :
+        ui-name : |
+            minCofitExp
+        short-hint : |
+            How many experiments need to have been used (passed all quality filters) in order to compute Cofitness between experiments
+        long-hint : |
+            Refer to manual.
+    Spfc_minT :
+        ui-name : |
+            Spfc_minT
+        short-hint : |
+            Minimum absolute value of a T score for an experiment on a gene to pass as a specific phenotype.
+        long-hint : |
+            Refer to manual.
+    Spfc_minFit :
+        ui-name : |
+            Spfc_minFit
+        short-hint : |
+            Minimum absolute value of a fit score for an experiment on a gene to pass as a specific phenotype
+        long-hint : |
+            Refer to manual.
+    Spfc_percentile :
+        ui-name : |
+            Spfc_percentile
+        short-hint : |
+            Which percentile of experiments are we only looking above for specific phenotypes.
+        long-hint : |
+            Refer to manual.
+    Spfc_percentileFit :
+        ui-name : |
+            Spfc_percentileFit
+        short-hint : |
+            Check whether the percentile you give falls below some threshold, the threshold being this number.
+        long-hint : |
+            Refer to manual.
+    Spfc_minDelta :
+        ui-name : |
+            Spfc_minDelta
+        short-hint : |
+            A float that's added to percentile to make sure the values are significant for specific phenotypes.
+        long-hint : |
+            Refer to manual.
+    High_min_fit :
+        ui-name : |
+            High_min_fit
+        short-hint : |
+            Minimum fitness value to be counted as high.
+        long-hint : |
+            Refer to manual.
+    High_min_t :
+        ui-name : |
+            High_min_t
+        short-hint : |
+            Minimum t score value to be counted as high.
+        long-hint : |
+            Refer to manual.
+    High_max_se :
+        ui-name : |
+            High_max_se
+        short-hint : |
+            Fit/T <= max_se for this to pass as High Fitness
+        long-hint : |
+            Refer to manual.
+    High_min_reads :
+        ui-name : |
+            High_min_reads
+        short-hint : |
+            Minimum total number of reads in a gene and experiment to pass as high
+        long-hint : |
+            Refer to manual.
+    High_min_gMean :
+        ui-name : |
+            High_min_gMean
+        short-hint : |
+            Minimum average of reads over all locusIds in an experiment
+        long-hint : |
+            Refer to manual.
+    High_max_below :
+        ui-name : |
+            High_max_below
+        short-hint : |
+            Fitness score has to be greater than the maximum fitness over the gene minus this value to pass as high
+        long-hint : |
+            Refer to manual.
+    High_min_strains :
+        ui-name : |
+            High_min_strains
+        short-hint : |
+            Minimum total number of strains inserted in a gene to pass as high
+        long-hint : |
+            Refer to manual.
+    High_min_strain_fraction :
+        ui-name : |
+            High_min_strain_fraction
+        short-hint : |
+            Minimum ratio between total reads number in a gene (that is already used in the High Dataframe) and strains inserted in that gene to pass as high (Reads in gene/strains in gene)
+        long-hint : |
+            Refer to manual.
+    Strong_lr :
+        ui-name : |
+            Strong_lr
+        short-hint : |
+            Fitness value (log ratio) needed to pass as 'strong'
+        long-hint : |
+            Refer to manual.
+    Strong_t :
+        ui-name : |
+            Strong_t
+        short-hint : |
+            T score needed to pass as 'strong'
+        long-hint : |
+            Refer to manual.
     output_name :
         ui-name : |
             Output Name
@@ -60,8 +312,5 @@ parameters :
         long-hint : |
             No restrictions besides use of letters, numbers and underscores only.
 description : |
-    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed pulvinar efficitur felis, quis tincidunt sem congue at. Vivamus ornare feugiat faucibus. Fusce tincidunt mattis nunc, nec varius purus convallis quis. Nulla facilisi. In at magna dolor. Suspendisse sit amet felis at arcu auctor dapibus vitae pharetra dui. Nam semper mi quis tortor fermentum mollis. Donec a arcu pharetra, rutrum dolor vitae, rutrum mauris. Donec ornare fringilla sagittis. Nam laoreet est in elementum malesuada. Vestibulum id mi eget urna hendrerit feugiat. Donec et ultrices nulla. Phasellus diam eros, dapibus at tempus nec, semper vel ante.</p>
-
-    <p>Curabitur auctor, metus at tristique euismod, odio elit tincidunt neque, a facilisis sem massa convallis dolor. Interdum et malesuada fames ac ante ipsum primis in faucibus. Nunc ut hendrerit tellus. Nunc lacinia laoreet finibus. Etiam vitae sagittis enim. Fusce consectetur porta est eu pretium. In hac habitasse platea dictumst. Integer pellentesque sit amet sapien id venenatis. Nullam ac risus at orci eleifend aliquet. Vestibulum elit purus, euismod a nibh quis, pellentesque semper leo. Curabitur ullamcorper felis hendrerit nunc egestas, sit amet pharetra sapien porttitor. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Maecenas hendrerit ipsum a ligula aliquet vestibulum. Duis a ante urna. Aenean ante neque, rhoncus id luctus ut, accumsan vel nunc.</p>
-
-    <p>Pellentesque accumsan aliquet magna, id consectetur tellus condimentum eu. Suspendisse elit dui, ornare ac leo eget, tincidunt feugiat orci. Maecenas auctor gravida lacinia. Mauris interdum nisi vel gravida varius. Nullam tempus, purus eget posuere aliquet, odio elit semper massa, quis facilisis massa odio vitae lacus. Fusce varius enim a mi vehicula tempus. Maecenas faucibus tellus ipsum, at venenatis ipsum auctor et. Suspendisse sem mi, dignissim id porta efficitur, auctor eget magna. Vivamus varius purus nulla, porttitor euismod lorem cursus quis. Nulla sit amet eros nec sem ultrices pulvinar.</p>
+        Refer to manual. Available at ?
+    

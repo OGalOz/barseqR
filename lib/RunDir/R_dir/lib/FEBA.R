@@ -54,7 +54,9 @@ GeneFitness = function(genes, strainInfo, countCond, countT0,
 		    ...) {
     d = AvgStrainFitness(countCond, countT0, strainInfo$locusId,
       		         strainsUsed=strainsUsed, genesUsed=genesUsed, ...);
-    d$fitnorm = NormalizeByScaffold(d$fit, d$locusId, genes, minToUse=minGenesPerScaffold);
+
+    d$fitnorm = NormalizeByScaffold(d$fit, d$locusId, 
+                                    genes, minToUse=minGenesPerScaffold);
 
     d1 = AvgStrainFitness(countCond, countT0, strainInfo$locusId,
       		         strainsUsed=strainsUsed & use1, genesUsed=genesUsed12, ...);
@@ -311,6 +313,7 @@ FEBA_Fit = function(expsUsed, all, genes,
     #   strainsUsed: optional
     #   genesUsed12: optional
     #   pred: dataframe 
+    #   We are Setting minSampleReads to 0!
     # 
 
 
@@ -322,7 +325,7 @@ FEBA_Fit = function(expsUsed, all, genes,
 	if (!is.null(expsUsed$Drop) && any(expsUsed$Drop, na.rm=TRUE)) {
             # ^ na.rm: a logical value indicating whether NA values should be 
             #   stripped before the computation proceeds. 
-            # The 'Drop' column means if Drop=TRUE then ignore file
+            # The 'Drop' column means if Drop=TRUE then ignore sets column
 	    ignore = unique(c(ignore, expsUsed$name[!is.na(expsUsed$Drop) & expsUsed$Drop]));
 	}
 	if(length(ignore) > 0) {
@@ -540,6 +543,12 @@ FEBA_Save_Tables = function(fit, genes, org="?",
 		 expsU=expsUsed,
 		 ... # for FEBA_Quality_Plot
 		 ) {
+
+    # ARGS:
+    #
+    #
+    #
+
 	if(!file.exists(dir)) dir.create(dir);
 
 	for (n in words("q lr lrn lrn1 lrn2 t")) {

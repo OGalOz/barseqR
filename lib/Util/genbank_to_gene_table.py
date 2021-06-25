@@ -3,7 +3,7 @@ import logging
 import os
 import sys
 import subprocess
-from util.bioparsing import parseFASTA
+from Util.bioparsing import parseFASTA
 #from BCBio import GFF
 from Bio import SeqIO
 

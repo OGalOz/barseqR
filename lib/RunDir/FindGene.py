@@ -4,20 +4,26 @@ import logging
 import os
 import math
 
-# Given scaffold, pos, and hash of scaffold to list of sorted genes,
-# returns the locusId and the fraction through the gene it is 
-# in (as a list of 2 elements) [locusId, fraction]
-#
-# If the location overlaps multiple genes or no genes, 
-# returns locusId = "", f = "".
-#
-# Each gene should be a hash that contains begin, end, strand, and locusId
-#
-# This code does not support orfs that wrap around the origin, and it 
-# may not give correct results if there are complicated overlaps between ORFs. 
-# In particular, it only checks the adjacent ORF on either side to see if there 
-# is an overlap.
 def LocationToGene(scaffold, pos, sortedGenes):
+    """
+    Description:
+        Given scaffold, pos, and dict of scaffold to list of sorted genes,
+        returns the locusId and the fraction through the gene it is 
+        in (as a list of 2 elements) [locusId, fraction]
+        
+        If the location overlaps multiple genes or no genes, 
+        returns locusId = "", f = "".
+        
+        Each gene should be a hash that contains begin, end, strand, and locusId
+        
+        This code does not support orfs that wrap around the origin, and it 
+        may not give correct results if there are complicated overlaps between ORFs. 
+        In particular, it only checks the adjacent ORF on either side to see if there 
+        is an overlap.
+
+        If the strand is the "-" strand, we return 1 - f
+
+    """
     if scaffold == "pastEnd":
         return ["",""]
     if scaffold in sortedGenes:
