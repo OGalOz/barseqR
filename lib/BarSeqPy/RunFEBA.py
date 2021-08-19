@@ -1,7 +1,11 @@
 #!python3
 """
 KBase version of BarSeq analysis - Gene and Strain Fitness tests from Barcoded 
-    Transposon experiments
+    Transposon experiments.
+
+all_df is the table that combined all the barcodecounts into one.
+This file and function 'RunFEBA' is imported by lib/RunDir/run_barseqR.py
+
 """
 
 import pandas as pd
@@ -22,7 +26,7 @@ from BarSeqPy.FEBA_Save_Tables import FEBA_Save_Tables
 
 
 
-def RunFEBA(org_str, data_dir, FEBA_dir, start_point,
+def RunFEBA(org_str, data_dir, FEBA_dir, start_point=1,
             cfg_fp=None,
             debug_bool=False, breakpoints_bool=True,
             meta_ix=7):
@@ -45,6 +49,7 @@ def RunFEBA(org_str, data_dir, FEBA_dir, start_point,
         FEBA_dir: (str) Path to directory which contains the 
                     following files: 'desc_short_rules'
         start_point (int): Where you want to start running the program
+                            (doesn't matter in kbase)
         debug_bool: Whether you'd like to print the dataframes
                 as a test to the data_dir before running FEBA_Fit
    
@@ -64,15 +69,19 @@ def RunFEBA(org_str, data_dir, FEBA_dir, start_point,
 
     """
 
+    logging.info("Beginning 2nd major part of analysis: BarSeqPy" + "\n--"*5)
+
     # Preparing config variables
     if cfg_fp is None:
         cfg_fp = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                               "config.json")
-    cfg_d = json.loads(open(cfg_FP).read()) 
+    cfg_d = json.loads(open(cfg_fp).read()) 
 
     
     if start_point == 1:
         # Part 1 - Data Preparation 1
+
+        logging.info("Beginning data prep 1" + "\n--1"*5)
         res_dp1 = data_prep_1(data_dir,
                               FEBA_dir, 
                               debug_bool=False,

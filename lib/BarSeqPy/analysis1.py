@@ -12,8 +12,6 @@ from BarSeqPy.translate_R_to_pandas import *
 
 
 
-
-
 def analysis_1(all_df, exps_df, genes_df, 
                expsT0, t0tot, 
                genesUsed, genesUsed12, strainsUsed,  
@@ -22,7 +20,7 @@ def analysis_1(all_df, exps_df, genes_df,
                starting_debug_col=0):
     """
     Questions: is all_df at all modified? 
-    exps_df has modified column names right?
+    exps_df has modified column names?
     genes_df modified?
 
     Args:

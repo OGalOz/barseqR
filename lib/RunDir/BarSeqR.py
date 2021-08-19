@@ -18,14 +18,16 @@ from RunDir.FindGene import LocationToGene, CheckGeneLocations
 
 
 
-
-def prepare_all_poolcount_etc(config_fp, inp_arg_list, this_file_dir):
+# Called by RunBarSeq in file 'run_barseqR.py' in this dir
+def prepare_all_barcodecount_etc(config_fp, inp_arg_list, this_file_dir):
     """
     This is run from the file run_barseqR in this directory.
 
+    barcodecount = poolcount
+
     What this program does:
        Checks all the input files
-       Writes all poolcount file (Combines all the poolcounts)
+       Writes all.poolcount file (Combines all the barcodecounts)
 
     Args:
         config_fp: Path to config file
@@ -37,10 +39,10 @@ def prepare_all_poolcount_etc(config_fp, inp_arg_list, this_file_dir):
 
     Description: Overall, we store all the important variables into a dict
                 called all_vars, which we pass into every function in which
-                we take out a new variable. Note that all the poolcount files,
+                we take out/create a new variable. Note that all the barcodecount files,
                 including all.poolcount, should have the same exact number of
                 lines, which should be equal to the number of lines in the 
-                poolfile itself. How the program combines the poolcount
+                mutantpool file itself. How the program combines the barcodecount
                 files is based on this fact.
                 The variable 'prespec_sets' MUST be set to True
                 within the KBase context.
@@ -61,7 +63,7 @@ def prepare_all_poolcount_etc(config_fp, inp_arg_list, this_file_dir):
             We use python's argparser library to get the arguments
             for all these values as though they are command line arguments.
             We add these variables to all_vars:
-            "org", "indir", "metadir", "exps", "genesfile", "poolfile", 
+            "org", "indir", "metadir", "exps", "genesfile", "mutantpool", 
             "outdir", "sets_dir","sets", "noR", "test", "feba_strain_usage"
             Note that the following are booleans (if True) or None (if False)
             "noR", "test", "feba_strain_usage" (the last three from above).
@@ -70,9 +72,9 @@ def prepare_all_poolcount_etc(config_fp, inp_arg_list, this_file_dir):
             In this function we check existence of dirs and files- 
             We check that indir, metadir and outdir exist as directories.
             We check that FEBA_Barseq.tsv, genes.GC, and pool.n10 are in
-            indir. We check that the poolfile has the right columns.
-            Should we check existence of all 'poolcount' files?
-            We add the variables 'expsfile', 'genesfile' and 'poolfile'
+            indir. We check that the mutantpool has the right columns.
+            Should we check existence of all 'barcodecount' files?
+            We add the variables 'expsfile', 'genesfile' and 'mutantpool'
             to all_vars
         run_load_compounds_load_media:
             First, we use the function 'LoadCompounds' 
@@ -120,8 +122,8 @@ def prepare_all_poolcount_etc(config_fp, inp_arg_list, this_file_dir):
             Here we take sets and convert them to ".poolcount" files
             we use sets dir and just add set_name to .poolcount
             Then we create two dicts:
-                1. setFiles: maps set names to poolcount filepaths
-                2. pcToSet: maps poolcount filepaths to set names (why?)
+                1. setFiles: maps set names to barcodecount filepaths
+                2. pcToSet: maps barcodecount filepaths to set names (why?)
         build_and_check_sets_experiments
             First we create a variable called 'setExps',
             which is a dict that goes from set name
@@ -140,16 +142,16 @@ def prepare_all_poolcount_etc(config_fp, inp_arg_list, this_file_dir):
             'setFh' (python dict): 
                 Maps setName -> list<list<Filehandle, Row num (int)>>
                 Goes from setName to a list, whose length is the
-                number of poolcount files relating to that set, 
+                number of barcodecount files relating to that set, 
                 with each element being a list with two elements:
-                the first is the filehandle for that poolcount file,
+                the first is the filehandle for that barcodecount file,
                 the second is the length of that file.
             'setIndex' (python dict):
                 Maps setName -> list<Indexes (str)>
                 For each setName, if the file we are looking
                 at is the first for this set, then we store the list of 
                 indexes (all column names after the metadata) in
-                this dict. Otherwise, if we've already seen a poolcount
+                this dict. Otherwise, if we've already seen a barcodecount
                 file for this set, then we compare the existing indeces
                 and double check that they match the first one.
                 If they don't, then we raise an Exception because
@@ -170,14 +172,14 @@ def prepare_all_poolcount_etc(config_fp, inp_arg_list, this_file_dir):
             We go through each set from the 'setFh' dict,
             which maps set name to a list of file handles (and file
             lengths) that relate to that set.
-            Then we iterate over every line of the poolcount
+            Then we iterate over every line of the barcodecount
             files, all of which should be the same length,
             and add the info from all of them into 
             a single line of all.poolcount. So we end
             adding lines to all.poolcount when we reach
-            the last line of the poolcount files.
+            the last line of the barcodecount files.
             Simply combine the same experiment name
-            from all the poolcount files and sets into 
+            from all the barcodecount files and sets into 
             a single massive 'all.poolcount' file.
             We also add the columns 'locusId' and 'f'
             which track if an insertion was inside a gene,
@@ -186,14 +188,14 @@ def prepare_all_poolcount_etc(config_fp, inp_arg_list, this_file_dir):
             both are the empty string ''.
         close_filehandles
             We simply close all the fileHandles of all the 
-            poolcount files, including the newly written all.poolcount.
+            barcodecount files, including the newly written all.poolcount.
         write_exps
             We rewrite the experiments file with only the 
             experiments we use and with the updated values.
             Values were updated in the function 'clean_exps'.
             We write the file to 'exps' in 'outdir'
         copy_pool_genes_strain_usage
-            We copy the files 'poolfile' and 'genesfile' to 
+            We copy the files 'mutantpool' and 'genesfile' to 
             'outdir' in preparation for the analysis part
             of the program.
         Then we return the variables that are useful for 
@@ -251,7 +253,7 @@ def prepare_all_poolcount_etc(config_fp, inp_arg_list, this_file_dir):
 
     # Test run stops
     if "test" in all_vars and all_vars["test"] is not None:
-        logging.info("All poolcount file headers verified \n")
+        logging.info("All barcodecount file headers verified \n")
         return 0
 
     # Begin writing all.poolcount string - no change to all_vars
@@ -264,7 +266,7 @@ def prepare_all_poolcount_etc(config_fp, inp_arg_list, this_file_dir):
     # Continue writing to all.poolcount string
     all_vars = combine_data_rows(all_vars)
 
-    # Write to all poolcounts and close set file handles
+    # Write to all.poolcounts and close set file handles
     close_filehandles(all_vars)
 
     # Write outdir/exps with only the exps for these sets and with
@@ -284,8 +286,7 @@ def prepare_all_poolcount_etc(config_fp, inp_arg_list, this_file_dir):
     ret_d = {
             "outdir": all_vars["outdir"],
             "FEBA_dir": all_vars["FEBA_dir"],
-            "org": all_vars["org"],
-            "bsPy_cfg_fp": all_vars["bsPy_cfg_fp"] 
+            "org": all_vars["org"]
     }
 
 
@@ -302,7 +303,7 @@ def get_args(all_vars, inp_arg_list):
         We use python's argparser library to get the arguments
         for all these values as though they are command line arguments.
         We add these variables to all_vars:
-        "org", "indir", "metadir", "exps", "genesfile", "poolfile", 
+        "org", "indir", "metadir", "exps", "genesfile", "mutantpool", 
         "outdir", "sets_dir","sets", "noR", "test", "feba_strain_usage"
         Note that the following are booleans (if True) or None (if False)
         "noR", "test", "feba_strain_usage" (the last three from above).
@@ -317,7 +318,7 @@ def get_args(all_vars, inp_arg_list):
     parser.add_argument("-metadir", type=str, default=None)
     parser.add_argument("-exps", type=str, default=None)
     parser.add_argument("-genesfile", type=str, default=None)
-    parser.add_argument("-poolfile", type=str, default=None)
+    parser.add_argument("-mutantpool", type=str, default=None)
     parser.add_argument("-outdir", type=str, default=None)
     parser.add_argument("-sets_dir", type=str, default=None)
     # FLAGS
@@ -340,7 +341,7 @@ def get_args(all_vars, inp_arg_list):
     all_vars["metadir"] = args.metadir
     all_vars["exps"] = args.exps
     all_vars["genesfile"] = args.genesfile
-    all_vars["poolfile"] = args.poolfile
+    all_vars["mutantpool"] = args.mutantpool
     all_vars["outdir"] = args.outdir
     all_vars["sets_dir"] = args.sets_dir
     all_vars["sets"] = args.sets
@@ -364,14 +365,14 @@ def get_args(all_vars, inp_arg_list):
 def copy_pool_genes_strain_usage(all_vars):
     """
     Description:
-        We copy the files 'poolfile' and 'genesfile' to 
+        We copy the files 'mutantpool' and 'genesfile' to 
         'outdir' in preparation for the analysis part
         of the program.
     """
     # Write to outdir/pool, outdir/genes
     outdir = all_vars["outdir"]
     indir = all_vars["indir"]
-    shutil.copyfile(all_vars["poolfile"], os.path.join(outdir, "pool"))
+    shutil.copyfile(all_vars["mutantpool"], os.path.join(outdir, "pool"))
     shutil.copyfile(all_vars["genesfile"], os.path.join(outdir, "genes"))
 
     # Copy over the strain usage files if they exist if 
@@ -475,6 +476,8 @@ def combine_data_rows(all_vars):
                 values if it did hit a gene.
 
     """
+
+    logging.info("Combining all.poolcount files to create all.poolcount")
     
     # Not sure what below code would do
     #namesUsed = {(x["SetName"] + "." + x["Index"]): 1 for x in all_vars["exps"]}
@@ -493,6 +496,8 @@ def combine_data_rows(all_vars):
         # counts keeps SetName.Index -> list of counts
         counts = {}
         nLine += 1
+        if nLine % 5000 == 0:
+            logging.info(f"At line # {nLine} out of {all_vars['expected_fl']}")
         metavalues = []
         # setFh dict mapping setName to list of <FileHandle, FileLength (int)>
         # relating to that set
@@ -589,12 +594,14 @@ def combine_data_rows(all_vars):
         raise Exception(
             "\n No insertionsi found in genes. Please check that "
             "{} contains genes, {} contains strains, ".format(
-                all_vars["genesfile"], all_vars["poolfile"]
+                all_vars["genesfile"], all_vars["mutantpool"]
             )
             + " and that the scaffold identifiers match."
         )
     all_vars["nLine"] = nLine
     all_vars["nInGene"] = nInGene
+
+    logging.info("Finished combining all barcodecount files to create all.poolcount")
     return all_vars
 
 
@@ -670,6 +677,7 @@ def map_strains_to_genes_open_filehandles(all_vars):
     for i in range(len(x)):
         all_vars[x[i]] = i
 
+    expected_file_length = None
     for k in all_vars["setFiles"].keys():
         # Below s is setName, filelist is list of poolcount fps related
         s, filelist = k, all_vars["setFiles"][k]
@@ -678,6 +686,11 @@ def map_strains_to_genes_open_filehandles(all_vars):
             # This is just to keep track of length of file
             with open(f, "r") as fh:
                 file_length = len(fh.read().split("\n"))
+                if expected_file_length is None:
+                    expected_file_length = file_length
+                if file_length != expected_file_length:
+                    logging.warning(f"For file {f}, file size doesn't match the first poolcount."
+                                    f" {f} filesize: {file_length}. First: {expected_file_length}")
             
             # Note we open files here! Close after writing all.poolcount
             fh = open(f,"r")
@@ -747,6 +760,7 @@ def map_strains_to_genes_open_filehandles(all_vars):
 
     all_vars["setFh"] = setFh
     all_vars["setIndex"] = setIndex
+    all_vars["expected_fl"] = expected_file_length
 
     return all_vars
 
@@ -827,6 +841,9 @@ def metadata_set_file_check(all_vars):
 
 def find_set_files(all_vars):
     """
+    Args:
+        all_vars (d)
+            sets:
     Description:
         Here we take sets and convert them to ".poolcount" files
         we use sets dir and just add set_name to .poolcount
@@ -1207,15 +1224,15 @@ def check_input_dirs(all_vars):
         Adds the following args to all_vars:
             expsfile
             genesfile
-            poolfile
+            mutantpool
 
     Description:
         In this function we check existence of dirs and files- 
         We check that indir, metadir and outdir exist as directories.
         We check that FEBA_Barseq.tsv, genes.GC, and pool.n10 are in
-        indir. We check that the poolfile has the right columns.
+        indir. We check that the mutantpool has the right columns.
         Should we check existence of all 'poolcount' files?
-        We add the variables 'expsfile', 'genesfile' and 'poolfile'
+        We add the variables 'expsfile', 'genesfile' and 'mutantpool'
         to all_vars
     """
     # Here we find experiments file "expsfile" called FEBA_Barseq.tsv
@@ -1238,9 +1255,9 @@ def check_input_dirs(all_vars):
                             " in indir files. Current files "
                             " in indir:\n" + ", ".join(indir_files))
         else:
-            all_vars["poolfile"] = os.path.join(all_vars["indir"], "pool")
+            all_vars["mutantpool"] = os.path.join(all_vars["indir"], "pool")
     else:
-        all_vars["poolfile"] = os.path.join(all_vars["indir"], "pool.n10")
+        all_vars["mutantpool"] = os.path.join(all_vars["indir"], "pool.n10")
 
 
     if not os.path.isdir(all_vars["metadir"]):
@@ -1252,12 +1269,12 @@ def check_input_dirs(all_vars):
                 raise Exception(f"File {x} missing from metadir. Current "
                                 " files in metadir:\n" + ", ".join(metadir_files))
 
-    # Checking columns of poolfile
-    poolcols = read_col_names(all_vars["poolfile"])
+    # Checking columns of mutantpool
+    poolcols = read_col_names(all_vars["mutantpool"])
     for col in ["barcode", "rcbarcode", "scaffold", "strand", "pos", "n", "nTot"]:
         if col not in poolcols:
             logging.warning(
-                "Warning: no column named {} in {}\n".format(col, all_vars["poolfile"])
+                "Warning: no column named {} in {}\n".format(col, all_vars["mutantpool"])
             )
 
     # Out dir check - where HTML ( html ) is written

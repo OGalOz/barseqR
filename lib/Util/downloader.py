@@ -19,7 +19,7 @@ def download_files(vp, d_d):
     Args:
         vp: validated params (d) (all values str)
             genome_ref
-            poolfile_ref
+            mutantpool_ref
             exps_ref
             sets_ref
             output_name
@@ -31,7 +31,7 @@ def download_files(vp, d_d):
            "ws": ws, workspace
            "smpl_s": sample service util
            "sets_dir": sets_dir,
-           "poolfile_path": poolfile_path,
+           "mutantpool_path": mutantpool_path,
            "gene_table_fp": gene_table_fp,
            "exps_file": exps_file
            "scratch_dir": path to scratch directory
@@ -72,12 +72,12 @@ def download_files(vp, d_d):
 
     # Download pool file and get related info. Name it pool.n10, place in indir
     # Ensure related to genome through organism_name
-    res = download_poolfile(vp['poolfile_ref'], d_d['poolfile_path'], dfu)
-    poolfile_path, related_genome_name, related_genome_ref = res
+    res = download_mutantpool(vp['mutantpool_ref'], d_d['mutantpool_path'], dfu)
+    mutantpool_path, related_genome_name, related_genome_ref = res
 
     '''
     if not (related_genome_name == organism_name):
-        raise Exception("Poolfile organism name does not match genome " \
+        raise Exception("mutantpool organism name does not match genome " \
                 + "organism name")
     '''
 
@@ -113,36 +113,36 @@ def download_files(vp, d_d):
     return DownloadResults
 
 
-# Gets poolfile path
-def download_poolfile(poolfile_ref, poolfile_path, dfu):
+# Gets mutantpool path
+def download_mutantpool(mutantpool_ref, mutantpool_path, dfu):
 
     GetObjectsParams = {
-            'object_refs': [poolfile_ref]
+            'object_refs': [mutantpool_ref]
             }
 
     # We get the handle id
-    PoolFileObjectData = dfu.get_objects(GetObjectsParams)['data'][0]['data']
+    mutantpoolObjectData = dfu.get_objects(GetObjectsParams)['data'][0]['data']
     logging.info("DFU Pool File Get objects results:")
-    logging.info(PoolFileObjectData)
+    logging.info(mutantpoolObjectData)
 
         
-    related_genome_name = PoolFileObjectData['related_organism_scientific_name']
-    related_genome_ref = PoolFileObjectData['related_genome_ref']
+    related_genome_name = mutantpoolObjectData['related_organism_scientific_name']
+    related_genome_ref = mutantpoolObjectData['related_genome_ref']
 
-    poolfile_handle = PoolFileObjectData['poolfile']
+    mutantpool_handle = mutantpoolObjectData['mutantpool']
 
 
     # Set params for shock to file
     ShockToFileParams = {
-            "handle_id": poolfile_handle,
-            "file_path": poolfile_path,
+            "handle_id": mutantpool_handle,
+            "file_path": mutantpool_path,
             "unpack": "uncompress"
             }
     ShockToFileOutput = dfu.shock_to_file(ShockToFileParams)
     logging.info(ShockToFileOutput)
-    # Poolfile is at location "poolfile_path"
+    # mutantpool is at location "mutantpool_path"
 
-    return [poolfile_path, related_genome_name, related_genome_ref]
+    return [mutantpool_path, related_genome_name, related_genome_ref]
 
 
 # We want scaffold_name and description_name
@@ -202,20 +202,20 @@ def download_sets_from_refs(ref_list, dfu, organism_name, sets_dir):
         SetInfo = obj['data']
 
         if SetInfo['related_organism_scientific_name'] != organism_name:
-            raise Exception("Poolfile organism name does not match genome " \
+            raise Exception("mutantpool organism name does not match genome " \
                 + "organism name")
          
 
-        setfile_handle = SetInfo['poolcount']
-        setfile_fn = SetInfo['set_name'] + ".poolcount"
+        barcodecount_handle = SetInfo['poolcount']
+        barcodecount_fn = SetInfo['set_name'] + ".poolcount"
         set_names_list.append(SetInfo['set_name'])
-        setfile_fp = os.path.join(sets_dir, setfile_fn)
+        barcodecount_fp = os.path.join(sets_dir, barcodecount_fn)
 
         
         # Set params for shock to file
         ShockToFileParams = {
-                "handle_id": setfile_handle,
-                "file_path": setfile_fp,
+                "handle_id": barcodecount_handle,
+                "file_path": barcodecount_fp,
                 "unpack": "uncompress"
                 }
         ShockToFileOutput = dfu.shock_to_file(ShockToFileParams)
@@ -267,7 +267,7 @@ def download_exps_file(dfu, exps_fp, exps_ref):
     return exps_fp
 
 
-
+# DEPRECATED
 def download_sample_set_to_file(smpl_s, smpl_set_fp, exps_ref, dfu):
     """We download an experiments file as sample set 
 

@@ -22,14 +22,14 @@
             }
         },
         {
-            "id": "poolfile_ref",
+            "id": "mutantpool_ref",
             "optional": false,
             "advanced": false,
             "allow_multiple": false,
             "default_values": [ "" ],
             "field_type": "text",
             "text_options": {
-                "valid_ws_types": ["KBasePoolTSV.PoolFile"]
+                "valid_ws_types": ["KBaseRBTnSeq.RBTS_MutantPool"]
             }
         },
         {
@@ -40,7 +40,7 @@
             "default_values": [ "" ],
             "field_type": "text",
             "text_options": {
-                "valid_ws_types": ["KBasePoolTSV.Experiments"]
+                "valid_ws_types": ["KBaseRBTnSeq.RBTS_ExperimentsTable"]
             }
         },
         {
@@ -51,7 +51,7 @@
             "default_values": [ "" ],
             "field_type": "text",
             "text_options": {
-                "valid_ws_types": ["KBasePoolTSV.PoolCount"]
+                "valid_ws_types": ["KBaseRBTnSeq.RBTS_BarcodeCount"]
             }
         },
         {
@@ -107,7 +107,7 @@
             "optional": false,
             "advanced": true,
             "allow_multiple": false,
-            "default_values": [ "True" ],
+            "default_values": [ "False" ],
             "field_type": "dropdown",
             "dropdown_options":{
                 "options": [
@@ -527,8 +527,8 @@
                     "target_property": "genome_ref",
                     "target_type_transform": "resolved-ref"
                 },{
-                    "input_parameter": "poolfile_ref",
-                    "target_property": "poolfile_ref",
+                    "input_parameter": "mutantpool_ref",
+                    "target_property": "mutantpool_ref",
                     "target_type_transform": "resolved-ref"
                 },{
                     "input_parameter": "exps_ref",

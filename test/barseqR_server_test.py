@@ -66,13 +66,17 @@ class barseqRTest(unittest.TestCase):
         # Check returned data with
         # self.assertEqual(ret[...], ...) or other unittest methods
 
-        # Burk 376
-        genome_ref = "58816/34/1"
-        exps_ref = "58816/9/1"
+        # Keio 
+        genome_ref = "62550/4/1"
+        exps_ref = "62550/57/1"
 
-        poolfile_ref = "58816/36/1"
-        sets_refs = ["58816/61/1"]
-        output_name = "Test_1"
+        poolfile_ref = "62550/55/1"
+        sets_refs = ["62550/53/1", 
+                    "62550/52/1"]
+        #            "62550/51/1",
+        #            "62550/50/1"]
+
+        output_name = "Keio_Test_1"
 
         base_input_d = {
          'workspace_name': self.wsName,
@@ -103,7 +107,7 @@ class barseqRTest(unittest.TestCase):
             "min_cor12" : 0.1,
             "max_gccor" : 0.2,
             "max_adjcor" : 0.25,
-            "nTopCofit" : "",
+            "nTopCofit" : -1,
             "minCofitExp" : 5,
             "Spfc_minT" : 5,
             "Spfc_minFit" : 1.0,
@@ -122,11 +126,10 @@ class barseqRTest(unittest.TestCase):
             "Strong_t": 5
         }
 
-
+        base_input_d.update(default_advanced_vars_d)
 
         ret = self.serviceImpl.run_barseqR(self.ctx, 
-                                           base_input_d.update(
-                                                default_advanced_vars_d)
+                                            base_input_d               
                                            )
     """
     # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa

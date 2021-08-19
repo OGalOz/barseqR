@@ -1,4 +1,32 @@
     TODO:
+	Test uploading of Model Data Type as well as pool file with reference model
+
+
+	'High_min_strain_fraction': 0.5, 'Strong_lr': 2, 'Strong_t': 5
+
+
+
+	"RBTS" Will be prefix to every single component relating to this - from apps to data types.
+	
+	For explanation- what level of familiarity with RBTnSeq should the audience be expected to have,
+	should I talk about how the wet lab processes work,
+	I would need help talking about wet lab processes.
+	Is there a need for a comprehensive manual, does it exist?
+
+
+	Remove "KBaseRBTnSeq" data types (?) from ci.kbase and narrative.kbase.
+	Replace "KBasePoolTSV" with better fitting name, or update RBTnSeq data types.
+	Keep working on KBasePool.TSV on CI regarding exporting fitness info - 
+	Create data type for resulting data from BarSeq- Matrices? How?
+	RNAExpression Matrix?
+
+	
+	Have app only return gene fitness, gene t scores, strain fitness and quality?
+	What else? 
+
+
+
+
         
         
         Writen full arguments for data_prep2, explain how the dataframes

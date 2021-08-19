@@ -3,7 +3,7 @@
 import os
 from datetime import datetime
 import logging
-from RunDir.BarSeqR import prepare_all_poolcount_etc 
+from RunDir.BarSeqR import prepare_all_barcodecount_etc 
 from BarSeqPy.RunFEBA import RunFEBA 
 
 # Following Function primarily used to set location of config for running BarSeq
@@ -19,12 +19,12 @@ def RunBarSeq(arg_list):
     logging.info("Beginning to run BarSeqR {}:-----------".format(dt_string))
 
     # Run Preparation Here
-    prep_vars = prepare_all_poolcount_etc(cfg_fp, arg_list, this_file_dir)
+    prep_vars = prepare_all_barcodecount_etc(cfg_fp, arg_list, this_file_dir)
 
     RunFEBA(prep_vars['org'], 
             prep_vars['outdir'], 
             prep_vars['FEBA_dir'], 
-            1,
+            start_point=1,
             cfg_fp=None,
             debug_bool=False, breakpoints_bool=False,
             meta_ix=7)

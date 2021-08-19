@@ -4,7 +4,7 @@
 name: RBTnSeq BarSeqR
 
 tooltip: |
-    Perform RBTnSeq BarSeq analysis and get website and Visuals
+    Get Gene Fitness (Part 2/2 BarSeq) 
 
 screenshots: []
 
@@ -31,13 +31,13 @@ parameters :
             The Genome on which all the experiments are based.
         long-hint : |
             The Genome on which all the experiments are based.
-    poolfile_ref :
+    mutantpool_ref :
         ui-name : |
-            Pool File
+            Mutant Pool
         short-hint : |
-            The Pool File, as created by MapTnSeq and Design Random Pool
+            The Mutant Pool, as created by MapTnSeq app
         long-hint : |
-            Barcodes and RCBarCodes to Counts and Genes.
+            The Mutant Pool, as created by MapTnSeq app
     exps_ref :
         ui-name : |
             Experiment File

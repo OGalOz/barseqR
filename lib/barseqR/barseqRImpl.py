@@ -6,8 +6,9 @@ import sys
 import json
 
 from RunDir.run_barseqR import RunBarSeq
-from Util.validate import validate_params
+from Util.validate import validate_params, create_barseqPy_config
 from Util.downloader import download_files
+from Util.utility_funcs import stop, printl
 from installed_clients.KBaseReportClient import KBaseReport
 from installed_clients.WorkspaceClient import Workspace
 from installed_clients.GenomeFileUtilClient import GenomeFileUtil
@@ -88,7 +89,14 @@ class barseqR:
         smpl_s = SampleService(self.callback_url)
         myToken = os.environ.get('KB_AUTH_TOKEN', None)
         ws = Workspace(self.ws_url, token=myToken)
-        ws_id = ws.get_workspace_info({'workspace': params['workspace_name']})[0]
+        printl(dir(ws))
+        printl(type(ws))
+        printl(params)
+        print(type(params))
+        pre_ws_id = ws.get_workspace_info({'workspace': params['workspace_name']})
+        logging.info(pre_ws_id)
+        ws_id = pre_ws_id[0]
+        printl(ws_id)
 
         logging.info(os.environ)
         
@@ -114,7 +122,7 @@ class barseqR:
 
 
         # We prepare locations of input files
-        poolfile_path = os.path.join(indir, "pool.n10")
+        mutantpool_path = os.path.join(indir, "pool.n10")
         gene_table_fp = os.path.join(indir, "genes.GC")
         exps_file = os.path.join(indir, "FEBA_Barseq.tsv")
 
@@ -127,10 +135,11 @@ class barseqR:
         logging.info(params)
         # From Util.validate python file
         val_par = validate_params(params)
+        create_barseqPy_config(params, '/kb/module/lib/BarSeqPy/config.json')
         '''
         val_par contains keys:
             genome_ref
-            poolfile_ref
+            mutantpool_ref
             exps_ref
             sets_ref
             output_name
@@ -146,13 +155,13 @@ class barseqR:
                 "ws": ws,
                 "smpl_s": smpl_s,
                 "sets_dir": sets_dir,
-                "poolfile_path": poolfile_path,
+                "mutantpool_path": mutantpool_path,
                 "gene_table_fp": gene_table_fp,
                 "exps_file": exps_file,
                 "scratch_dir": self.shared_folder
         }
         # We copy input files to proper directories.
-        # vp must contain genome_ref, poolfile_ref, exps_ref, sets_refs (list)
+        # vp must contain genome_ref, mutantpool_ref, exps_ref, sets_refs (list)
         # DownloadResults must contain keys 'org', 'set_names_list', 'set_fps_list'
         # set_names_list value contains the names of the sets without extensions
         DownloadResults = download_files(val_par, download_dict)
@@ -202,3 +211,5 @@ class barseqR:
                      'git_commit_hash': self.GIT_COMMIT_HASH}
         #END_STATUS
         return [returnVal]
+
+
