@@ -1360,13 +1360,8 @@ def runBarSeqPy(all_vars):
 
 
 
+def ret_test_inp_arg_list():
 
-
-
-def test():
-    logging.basicConfig(level=logging.DEBUG)
-    this_dir = os.path.dirname(os.path.realpath(__file__))
-    config_fp = os.path.join(this_dir, "barseqr_config_dict.json")
     inp_arg_list = [
         "-org",
         "SB2B",
@@ -1383,11 +1378,27 @@ def test():
         "SB2B_ML5_set2",
         "SB2B_ML5_set3"
     ]
-    prepare_all_poolcount_etc(config_fp, inp_arg_list)
+
+    return inp_arg_list
+
+
+
+def main():
+    logging.basicConfig(level=logging.DEBUG)
+    help_str = "python3 BarSeqR.py inp_arg_list.json op_dir 1"
+    args = sys.argv
+    if args[-1] != "1":
+        print(help_str)
+        sys.exit(0)
+    else:
+        this_dir = os.path.dirname(os.path.realpath(__file__))
+        config_fp = os.path.join(this_dir, "barseqr_config_dict.json")
+        sample_inp_arg_list = json.loads(open(args[1]).read())
+        prepare_all_barcodecount_etc(config_fp, sample_inp_arg_list, this_dir)
 
 
 if __name__ == "__main__":
-    test()
+    main()
 
 
 # Deprecated:
