@@ -592,7 +592,7 @@ def combine_data_rows(all_vars):
 
     if nInGene == 0:
         raise Exception(
-            "\n No insertionsi found in genes. Please check that "
+            "\n No insertions found in genes. Please check that "
             "{} contains genes, {} contains strains, ".format(
                 all_vars["genesfile"], all_vars["mutantpool"]
             )

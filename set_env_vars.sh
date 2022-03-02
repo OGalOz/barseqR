@@ -10,3 +10,5 @@ uspec=$PWD/ui/narrative/methods/run_barseqR/spec.json
 udisp=$PWD/ui/narrative/methods/run_barseqR/display.yaml
 Rdir=$PWD/lib/RunDir/R_dir
 
+#Docker fix
+docker run -it -v /var/run/docker.sock:/run/docker.sock alpine chmod g+w /run/docker.sock

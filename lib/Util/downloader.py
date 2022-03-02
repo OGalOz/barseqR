@@ -3,8 +3,9 @@
 import logging
 import os
 import sys
+import shutil
 from Bio import SeqIO
-from Util.genbank_to_gene_table import genbank_and_genome_fna_to_gene_table 
+#from Util.genbank_to_gene_table import genbank_and_genome_fna_to_gene_table 
 
 # Both vp and d_d are dicts - validate_params and download_dict, respectively.
 def download_files(vp, d_d):
@@ -28,6 +29,7 @@ def download_files(vp, d_d):
         d_d: download dict (d), keys:
            "dfu": dfu, datafile
            "gfu": gfu, genomefile
+            "gt_obj": GeneTable Object 
            "ws": ws, workspace
            "smpl_s": sample service util
            "sets_dir": sets_dir,
@@ -81,11 +83,18 @@ def download_files(vp, d_d):
                 + "organism name")
     '''
 
+    # Note that this gene table will be created at workdir/g2gt_results/genes.GC
+    g2gt_results = d_d['gt_obj'].genome_to_genetable({'genome_ref': vp['genome_ref']})
+    logging.info(g2gt_results)
+    gene_table_fp = os.path.join(d_d['scratch_dir'], 'g2gt_results', 'genes.GC')
+    shutil.copy(gene_table_fp, os.path.join(d_d['scratch_dir'], 'indir', 'genes.GC'))
+    '''
     # Convert genbank file to genes table, name it indir/genes.GC
     gt_cfg_dict = get_gene_table_config_dict(genbank_fp)
     genbank_and_genome_fna_to_gene_table(genbank_fp, 
                                         genome_fna_fp, 
                                         d_d['gene_table_fp'])
+    '''
 
     #convert_genbank_to_gene_table(genbank_fp, d_d['gene_table_fp'], gt_cfg_dict)
 
@@ -206,7 +215,7 @@ def download_sets_from_refs(ref_list, dfu, organism_name, sets_dir):
                 + "organism name")
          
 
-        barcodecount_handle = SetInfo['poolcount']
+        barcodecount_handle = SetInfo['barcodecount']
         barcodecount_fn = SetInfo['set_name'] + ".poolcount"
         set_names_list.append(SetInfo['set_name'])
         barcodecount_fp = os.path.join(sets_dir, barcodecount_fn)

@@ -184,6 +184,7 @@ def analysis_3(gene_fit_d, GeneFitResults, genes_df,
 
     if compute_spfc_bool:
         tmp_df = gene_fit_d['q'][gene_fit_d['q']['u']].merge(exps_df, on=["name","short"])
+        used_experiment_names = list(gene_fit_d['q']['name'][gene_fit_d['q']['u']])
         gene_fit_d['specphe'] = SpecificPhenotypes(gene_fit_d['g'], 
                                 tmp_df, gene_fit_d['lrn'][used_experiment_names], 
                                 gene_fit_d['t'][used_experiment_names], 
@@ -348,7 +349,7 @@ def compute_cofit(gene_fit_d, genes_df, CrudeOp_df, exps_df,
 
 
 
-    return gene_fit_d
+    return gene_fit_d, used_experiment_names
 
 
 

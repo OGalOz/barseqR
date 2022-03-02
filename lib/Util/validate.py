@@ -8,7 +8,7 @@ import json
 def validate_params(params):
     """What do we expect params to have as keys:
         genome_ref
-        poolfile_ref
+        mutantpool_ref
         exps_ref
         sets_ref
         output_name
@@ -17,7 +17,7 @@ def validate_params(params):
     Returns: ^ with strings as values for all
     """
 
-    for p in ["genome_ref", "poolfile_ref", "exps_ref"]:
+    for p in ["genome_ref", "mutantpool_ref", "exps_ref"]:
         if p not in params:
             raise Exception(p + " missing from params.")
         elif len(params[p].split('/')) != 3:

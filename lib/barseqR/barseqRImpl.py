@@ -14,6 +14,7 @@ from installed_clients.WorkspaceClient import Workspace
 from installed_clients.GenomeFileUtilClient import GenomeFileUtil
 from installed_clients.DataFileUtilClient import DataFileUtil
 from installed_clients.SampleServiceClient import SampleService
+from installed_clients.rbts_genome_to_genetableClient import rbts_genome_to_genetable
 #END_HEADER
 
 
@@ -86,6 +87,7 @@ class barseqR:
         logging.info("DFU VARS-- "*8)
         logging.info(vars(dfu))
         gfu = GenomeFileUtil(self.callback_url)
+        genetable_obj = rbts_genome_to_genetable(self.callback_url)
         smpl_s = SampleService(self.callback_url)
         myToken = os.environ.get('KB_AUTH_TOKEN', None)
         ws = Workspace(self.ws_url, token=myToken)
@@ -152,6 +154,7 @@ class barseqR:
         download_dict = {
                 "dfu": dfu,
                 "gfu": gfu,
+                "gt_obj": genetable_obj,
                 "ws": ws,
                 "smpl_s": smpl_s,
                 "sets_dir": sets_dir,

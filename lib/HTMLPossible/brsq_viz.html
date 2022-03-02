@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <!-- Base JS util files: --!>
+    <script src="JS/d3.min.js"></script>
+    <script src="JS/LayoutUtil.js"></script>
+    <script src="JS/d3SVGUtil.js"></script>
+    <script src="JS/ScatterPlot.js"></script>
+    <script src="JS/BarSeqRUtil.js"></script>
+
+    <!-- The Shell Data --!>
+    <script src="JS/BarSeqRVizShellData.js"></script>
+    <!-- The Graph Data --!>
+    <script src="JS/BasicGraphData.js"></script>
+
+    <!-- The UPDATED Data --!>
+    <!-- The Volcano Data --!>
+    <script src="JS/volcano_obj.js"></script>
+    <!-- The BarSeqData --!>
+    <script src="JS/exp2col.js"></script>
+    <script src="JS/genes2row.js"></script>
+
+
+    <style>
+        html,
+        body {
+            height: 100%;
+        }
+        td {
+            border: 1px solid black;
+        }
+
+    </style>
+</head>
+<body>
+
+    <script>
+        
+        createEntireShellFromShellDataObject(BasicShellData) 
+    </script>
+
+    <script>
+        const fullPopulate = async () => {
+        let ret_d = await createScatterPlotAxes('graph-svg', volcano_object, SVGGraphAxes)
+
+        populateSVGWithScatterPoints('graph-svg',
+                                     volcano_object['point_list'],
+                                     ret_d['x_ticks_list'],
+                                     ret_d['y_ticks_list'],
+                                     ret_d['x_axis_start'],
+                                     ret_d['y_axis_start'],
+                                     ret_d['x_axis_len'],
+                                     ret_d['y_axis_len'])
+        }
+        //fullPopulate()
+        
+        const prepareViz = async() => {
+            window.ret_d = await createScatterPlotAxes('graph-svg', 
+                                                    volcano_object, 
+                                                    SVGGraphAxes)
+            BarSeqRPopulateTable(exp2col['ix2col'])
+            BarSeqRPrepareOnClicks() 
+            window.BarSeqROrganismName = 'Default Organism Name'
+        }
+        prepareViz()
+
+
+        //let ret_d = createScatterPlotAxes('graph-svg', volcano_object, SVGGraphAxes)
+
+        //let d3svg = getSVG('graph-svg')
+
+
+        
+
+        //populateSVGWithScatterPlot('graph-svg', volcano_object, SVGGraphAxes);
+
+        /*
+
+        makeSVGAxesAndLabels("graph-svg", SVGGraphAxes, make_x_axis=false)
+
+        d3svg = getSVG("graph-svg"); 
+
+        makeDashedLine(d3svg, [100,100], [300,400],
+                        3, 3,
+                        "green", 1)
+        */
+
+  </script>
+
+</body>
+</html>
+
+

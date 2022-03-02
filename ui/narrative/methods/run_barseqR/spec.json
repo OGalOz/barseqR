@@ -1,702 +1,826 @@
 {
-    "ver": "0.0.1",
-    "authors": [
-        "omreegaloz"
-    ],
-    "contact": "",
-    "categories": ["active"],
-    "widgets": {
-        "input": null,
-        "output": null
+  "ver": "0.0.1",
+  "authors": [
+    "omreegaloz"
+  ],
+  "contact": "",
+  "categories": [
+    "active"
+  ],
+  "widgets": {
+    "input": null,
+    "output": "no-display"
+  },
+  "parameters": [
+    {
+      "id": "genome_ref",
+      "optional": false,
+      "advanced": false,
+      "allow_multiple": false,
+      "default_values": [
+        ""
+      ],
+      "field_type": "text",
+      "text_options": {
+        "valid_ws_types": [
+          "KBaseGenomes.Genome"
+        ]
+      }
     },
-    "parameters": [ 
-        {
-            "id": "genome_ref",
-            "optional": false,
-            "advanced": false,
-            "allow_multiple": false,
-            "default_values": [ "" ],
-            "field_type": "text",
-            "text_options": {
-                "valid_ws_types": ["KBaseGenomes.Genome"]
-            }
-        },
-        {
-            "id": "mutantpool_ref",
-            "optional": false,
-            "advanced": false,
-            "allow_multiple": false,
-            "default_values": [ "" ],
-            "field_type": "text",
-            "text_options": {
-                "valid_ws_types": ["KBaseRBTnSeq.RBTS_MutantPool"]
-            }
-        },
-        {
-            "id": "exps_ref",
-            "optional": false,
-            "advanced": false,
-            "allow_multiple": false,
-            "default_values": [ "" ],
-            "field_type": "text",
-            "text_options": {
-                "valid_ws_types": ["KBaseRBTnSeq.RBTS_ExperimentsTable"]
-            }
-        },
-        {
-            "id": "sets_refs",
-            "optional": false,
-            "advanced": false,
-            "allow_multiple": true,
-            "default_values": [ "" ],
-            "field_type": "text",
-            "text_options": {
-                "valid_ws_types": ["KBaseRBTnSeq.RBTS_BarcodeCount"]
-            }
-        },
-        {
-            "id": "okControls",
-            "optional": false,
-            "advanced": true,
-            "allow_multiple": false,
-            "default_values": [ "False" ],
-            "field_type": "dropdown",
-            "dropdown_options":{
-                "options": [
-                    {"value": "True",
-                    "display": "True"},
-                    {"value": "False",
-                    "display": "False"}
-                ]
-            }
-        },
-        {
-            "id": "okDay",
-            "optional": false,
-            "advanced": true,
-            "allow_multiple": false,
-            "default_values": [ "True" ],
-            "field_type": "dropdown",
-            "dropdown_options":{
-                "options": [
-                    {"value": "True",
-                    "display": "True"},
-                    {"value": "False",
-                    "display": "False"}
-                ]
-            }
-        },
-        {
-            "id": "okLane",
-            "optional": false,
-            "advanced": true,
-            "allow_multiple": false,
-            "default_values": [ "True" ],
-            "field_type": "dropdown",
-            "dropdown_options":{
-                "options": [
-                    {"value": "True",
-                    "display": "True"},
-                    {"value": "False",
-                    "display": "False"}
-                ]
-            }
-        },
-        {
-            "id": "drop_exps",
-            "optional": false,
-            "advanced": true,
-            "allow_multiple": false,
-            "default_values": [ "False" ],
-            "field_type": "dropdown",
-            "dropdown_options":{
-                "options": [
-                    {"value": "True",
-                    "display": "True"},
-                    {"value": "False",
-                    "display": "False"}
-                ]
-            }
-        },
-        {
-            "id": "compute_cofit_bool",
-            "optional": false,
-            "advanced": true,
-            "allow_multiple": false,
-            "default_values": [ "True" ],
-            "field_type": "dropdown",
-            "dropdown_options":{
-                "options": [
-                    {"value": "True",
-                    "display": "True"},
-                    {"value": "False",
-                    "display": "False"}
-                ]
-            }
-        },
-        {
-            "id": "compute_High_bool",
-            "optional": false,
-            "advanced": true,
-            "allow_multiple": false,
-            "default_values": [ "True" ],
-            "field_type": "dropdown",
-            "dropdown_options":{
-                "options": [
-                    {"value": "True",
-                    "display": "True"},
-                    {"value": "False",
-                    "display": "False"}
-                ]
-            }
-        },
-        {
-            "id": "compute_spfc_bool",
-            "optional": false,
-            "advanced": true,
-            "allow_multiple": false,
-            "default_values": [ "True" ],
-            "field_type": "dropdown",
-            "dropdown_options":{
-                "options": [
-                    {"value": "True",
-                    "display": "True"},
-                    {"value": "False",
-                    "display": "False"}
-                ]
-            }
-        },
-        {
-            "id": "minSampleReads",
-            "optional": false,
-            "advanced": true,
-            "allow_multiple": false,
-            "default_values": [ "20000" ],
-            "text_options": {
-                "validate_as": "int"
-            },
-            "field_type": "text"
-        },
-        {
-            "id": "minGenesPerScaffold",
-            "optional": false,
-            "advanced": true,
-            "allow_multiple": false,
-            "default_values": [ "10" ],
-            "text_options": {
-                "validate_as": "int"
-            },
-            "field_type": "text"
-        },
-        {
-            "id": "minT0Strain",
-            "optional": false,
-            "advanced": true,
-            "allow_multiple": false,
-            "default_values": [ "3" ],
-            "text_options": {
-                "validate_as": "int"
-            },
-            "field_type": "text"
-        },
-        {
-            "id": "minT0Gene",
-            "optional": false,
-            "advanced": true,
-            "allow_multiple": false,
-            "default_values": [ "30" ],
-            "text_options": {
-                "validate_as": "int"
-            },
-            "field_type": "text"
-        },
-        {
-            "id": "minGenesAllowed",
-            "optional": false,
-            "advanced": true,
-            "allow_multiple": false,
-            "default_values": [ "100" ],
-            "text_options": {
-                "validate_as": "int"
-            },
-            "field_type": "text"
-        },
-        {
-            "id": "minGenesUsed12",
-            "optional": false,
-            "advanced": true,
-            "allow_multiple": false,
-            "default_values": [ "100" ],
-            "text_options": {
-                "validate_as": "int"
-            },
-            "field_type": "text"
-        },
-        {
-            "id": "norm_median_window",
-            "optional": false,
-            "advanced": true,
-            "allow_multiple": false,
-            "default_values": [ "251" ],
-            "text_options": {
-                "validate_as": "int"
-            },
-            "field_type": "text"
-        },
-        {
-            "id": "min_gMed",
-            "optional": false,
-            "advanced": true,
-            "allow_multiple": false,
-            "default_values": [ "50" ],
-            "text_options": {
-                "validate_as": "int",
-                "min_int": 0,
-                "max_int": 10000
-            },
-            "field_type": "text"
-        },
-        {
-            "id": "max_mad12",
-            "optional": false,
-            "advanced": true,
-            "allow_multiple": false,
-            "default_values": [ "0.5" ],
-            "text_options": {
-                "validate_as": "float",
-                "min_float": 0
-            },
-            "field_type": "text"
-        },
-
-
-        {
-            "id": "min_cor12",
-            "optional": false,
-            "advanced": true,
-            "allow_multiple": false,
-            "default_values": [ "0.1" ],
-            "text_options": {
-                "validate_as": "float",
-                "min_float": 0
-            },
-            "field_type": "text"
-        },
-
-        {
-            "id": "max_gccor",
-            "optional": false,
-            "advanced": true,
-            "allow_multiple": false,
-            "default_values": [ "0.2" ],
-            "text_options": {
-                "validate_as": "float"
-            },
-            "field_type": "text"
-        },
-        {
-            "id": "max_adjcor",
-            "optional": false,
-            "advanced": true,
-            "allow_multiple": false,
-            "default_values": [ "0.25" ],
-            "text_options": {
-                "validate_as": "float"
-            },
-            "field_type": "text"
-        },
-
-        {
-            "id": "nTopCofit",
-            "optional": false,
-            "advanced": true,
-            "allow_multiple": false,
-            "default_values": [ "-1" ],
-            "text_options": {
-                "validate_as": "int"
-            },
-            "field_type": "text"
-        },
-        {
-            "id": "minCofitExp",
-            "optional": false,
-            "advanced": true,
-            "allow_multiple": false,
-            "default_values": [ "5" ],
-            "text_options": {
-                "validate_as": "int"
-            },
-            "field_type": "text"
-        },
-
-
-        {
-            "id": "Spfc_minT",
-            "optional": false,
-            "advanced": true,
-            "allow_multiple": false,
-            "default_values": [ "5.0" ],
-            "text_options": {
-                "validate_as": "float"
-            },
-            "field_type": "text"
-        },
-        {
-            "id": "Spfc_minFit",
-            "optional": false,
-            "advanced": true,
-            "allow_multiple": false,
-            "default_values": [ "1.0" ],
-            "text_options": {
-                "validate_as": "float"
-            },
-            "field_type": "text"
-        },
-        {
-            "id": "Spfc_percentile",
-            "optional": false,
-            "advanced": true,
-            "allow_multiple": false,
-            "default_values": [ "0.95" ],
-            "text_options": {
-                "validate_as": "float"
-            },
-            "field_type": "text"
-        },
-        {
-            "id": "Spfc_percentileFit",
-            "optional": false,
-            "advanced": true,
-            "allow_multiple": false,
-            "default_values": [ "1.0" ],
-            "text_options": {
-                "validate_as": "float"
-            },
-            "field_type": "text"
-        },
-        {
-            "id": "Spfc_minDelta",
-            "optional": false,
-            "advanced": true,
-            "allow_multiple": false,
-            "default_values": [ "0.5" ],
-            "text_options": {
-                "validate_as": "float"
-            },
-            "field_type": "text"
-        },
-
-
-        {
-            "id": "High_min_fit",
-            "optional": false,
-            "advanced": true,
-            "allow_multiple": false,
-            "default_values": [ "4.0" ],
-            "text_options": {
-                "validate_as": "float"
-            },
-            "field_type": "text"
-        },
-        {
-            "id": "High_min_t",
-            "optional": false,
-            "advanced": true,
-            "allow_multiple": false,
-            "default_values": [ "5.0" ],
-            "text_options": {
-                "validate_as": "float"
-            },
-            "field_type": "text"
-        },
-        {
-            "id": "High_min_reads",
-            "optional": false,
-            "advanced": true,
-            "allow_multiple": false,
-            "default_values": [ "10" ],
-            "text_options": {
-                "validate_as": "int"
-            },
-            "field_type": "text"
-        },
-        {
-            "id": "High_min_strains",
-            "optional": false,
-            "advanced": true,
-            "allow_multiple": false,
-            "default_values": [ "2" ],
-            "text_options": {
-                "validate_as": "int"
-            },
-            "field_type": "text"
-        },
-        {
-            "id": "High_max_se",
-            "optional": false,
-            "advanced": true,
-            "allow_multiple": false,
-            "default_values": [ "2.0" ],
-            "text_options": {
-                "validate_as": "float"
-            },
-            "field_type": "text"
-        },
-        {
-            "id": "High_min_gMean",
-            "optional": false,
-            "advanced": true,
-            "allow_multiple": false,
-            "default_values": [ "10" ],
-            "text_options": {
-                "validate_as": "int"
-            },
-            "field_type": "text"
-        },
-        {
-            "id": "High_max_below",
-            "optional": false,
-            "advanced": true,
-            "allow_multiple": false,
-            "default_values": [ "8" ],
-            "text_options": {
-                "validate_as": "int"
-            },
-            "field_type": "text"
-        },
-        {
-            "id": "High_min_strain_fraction",
-            "optional": false,
-            "advanced": true,
-            "allow_multiple": false,
-            "default_values": [ "0.5" ],
-            "text_options": {
-                "validate_as": "float"
-            },
-            "field_type": "text"
-        },
-
-        {
-            "id": "Strong_lr",
-            "optional": false,
-            "advanced": true,
-            "allow_multiple": false,
-            "default_values": [ "2.0" ],
-            "text_options": {
-                "validate_as": "float"
-            },
-            "field_type": "text"
-        },
-        {
-            "id": "Strong_t",
-            "optional": false,
-            "advanced": true,
-            "allow_multiple": false,
-            "default_values": [ "5.0" ],
-            "text_options": {
-                "validate_as": "float"
-            },
-            "field_type": "text"
-        },
-        {
-            "id": "output_name",
-            "optional": false,
-            "advanced": false,
-            "allow_multiple": false,
-            "default_values": [ "" ],
-            "field_type": "text",
-            "text_options": {
-                "is_output_name": true
-            }
-        }
-    ],
-    "behavior": {
-        "service-mapping": {
-            "url": "",
-            "name": "barseqR",
-            "method": "run_barseqR",
-            "input_mapping": [
-                {
-                    "narrative_system_variable": "workspace",
-                    "target_property": "workspace_name"
-                },{
-                    "narrative_system_variable": "workspace_id",
-                    "target_property": "workspace_id"
-                },{
-                    "input_parameter": "genome_ref",
-                    "target_property": "genome_ref",
-                    "target_type_transform": "resolved-ref"
-                },{
-                    "input_parameter": "mutantpool_ref",
-                    "target_property": "mutantpool_ref",
-                    "target_type_transform": "resolved-ref"
-                },{
-                    "input_parameter": "exps_ref",
-                    "target_property": "exps_ref",
-                    "target_type_transform": "resolved-ref"
-                },{
-                    "input_parameter": "sets_refs",
-                    "target_property": "sets_refs",
-                    "target_type_transform": "resolved-ref"
-                },{
-                    "input_parameter": "High_max_below",
-                    "target_property": "High_max_below"
-                  },
-                  {
-                    "input_parameter": "High_max_se",
-                    "target_property": "High_max_se"
-                  },
-                  {
-                    "input_parameter": "High_min_fit",
-                    "target_property": "High_min_fit"
-                  },
-                  {
-                    "input_parameter": "High_min_gMean",
-                    "target_property": "High_min_gMean"
-                  },
-                  {
-                    "input_parameter": "High_min_reads",
-                    "target_property": "High_min_reads"
-                  },
-                  {
-                    "input_parameter": "High_min_strain_fraction",
-                    "target_property": "High_min_strain_fraction"
-                  },
-                  {
-                    "input_parameter": "High_min_strains",
-                    "target_property": "High_min_strains"
-                  },
-                  {
-                    "input_parameter": "High_min_t",
-                    "target_property": "High_min_t"
-                  },
-                  {
-                    "input_parameter": "Spfc_minDelta",
-                    "target_property": "Spfc_minDelta"
-                  },
-                  {
-                    "input_parameter": "Spfc_minFit",
-                    "target_property": "Spfc_minFit"
-                  },
-                  {
-                    "input_parameter": "Spfc_minT",
-                    "target_property": "Spfc_minT"
-                  },
-                  {
-                    "input_parameter": "Spfc_percentile",
-                    "target_property": "Spfc_percentile"
-                  },
-                  {
-                    "input_parameter": "Spfc_percentileFit",
-                    "target_property": "Spfc_percentileFit"
-                  },
-                  {
-                    "input_parameter": "Strong_lr",
-                    "target_property": "Strong_lr"
-                  },
-                  {
-                    "input_parameter": "Strong_t",
-                    "target_property": "Strong_t"
-                  },
-                  {
-                    "input_parameter": "compute_High_bool",
-                    "target_property": "compute_High_bool"
-                  },
-                  {
-                    "input_parameter": "compute_cofit_bool",
-                    "target_property": "compute_cofit_bool"
-                  },
-                  {
-                    "input_parameter": "compute_spfc_bool",
-                    "target_property": "compute_spfc_bool"
-                  },
-                  {
-                    "input_parameter": "drop_exps",
-                    "target_property": "drop_exps"
-                  },
-                  {
-                    "input_parameter": "max_adjcor",
-                    "target_property": "max_adjcor"
-                  },
-                  {
-                    "input_parameter": "max_gccor",
-                    "target_property": "max_gccor"
-                  },
-                  {
-                    "input_parameter": "max_mad12",
-                    "target_property": "max_mad12"
-                  },
-                  {
-                    "input_parameter": "minCofitExp",
-                    "target_property": "minCofitExp"
-                  },
-                  {
-                    "input_parameter": "minGenesAllowed",
-                    "target_property": "minGenesAllowed"
-                  },
-                  {
-                    "input_parameter": "minGenesPerScaffold",
-                    "target_property": "minGenesPerScaffold"
-                  },
-                  {
-                    "input_parameter": "minGenesUsed12",
-                    "target_property": "minGenesUsed12"
-                  },
-                  {
-                    "input_parameter": "minSampleReads",
-                    "target_property": "minSampleReads"
-                  },
-                  {
-                    "input_parameter": "minT0Gene",
-                    "target_property": "minT0Gene"
-                  },
-                  {
-                    "input_parameter": "minT0Strain",
-                    "target_property": "minT0Strain"
-                  },
-                  {
-                    "input_parameter": "min_cor12",
-                    "target_property": "min_cor12"
-                  },
-                  {
-                    "input_parameter": "min_gMed",
-                    "target_property": "min_gMed"
-                  },
-                  {
-                    "input_parameter": "nTopCofit",
-                    "target_property": "nTopCofit"
-                  },
-                  {
-                    "input_parameter": "norm_median_window",
-                    "target_property": "norm_median_window"
-                  },
-                  {
-                    "input_parameter": "okControls",
-                    "target_property": "okControls"
-                  },
-                  {
-                    "input_parameter": "okDay",
-                    "target_property": "okDay"
-                  },
-                  {
-                    "input_parameter": "okLane",
-                    "target_property": "okLane"
-                  },
-                {
-                    "input_parameter": "output_name",
-                    "target_property": "output_name"
-                }
-            ],
-            "output_mapping": [
-                {
-                    "service_method_output_path": [0,"report_name"],
-                    "target_property": "report_name"
-                },{
-                    "service_method_output_path": [0,"report_ref"],
-                    "target_property": "report_ref"
-                }
-            ]
-        }
+    {
+      "id": "mutantpool_ref",
+      "optional": false,
+      "advanced": false,
+      "allow_multiple": false,
+      "default_values": [
+        ""
+      ],
+      "field_type": "text",
+      "text_options": {
+        "valid_ws_types": [
+          "KBaseRBTnSeq.RBTS_MutantPool"
+        ]
+      }
     },
-    "job_id_output_field": "docker"
+    {
+      "id": "exps_ref",
+      "optional": false,
+      "advanced": false,
+      "allow_multiple": false,
+      "default_values": [
+        ""
+      ],
+      "field_type": "text",
+      "text_options": {
+        "valid_ws_types": [
+          "KBaseRBTnSeq.RBTS_ExperimentsTable"
+        ]
+      }
+    },
+    {
+      "id": "sets_refs",
+      "optional": false,
+      "advanced": false,
+      "allow_multiple": true,
+      "default_values": [
+        ""
+      ],
+      "field_type": "text",
+      "text_options": {
+        "valid_ws_types": [
+          "KBaseRBTnSeq.RBTS_BarcodeCount"
+        ]
+      }
+    },
+    {
+      "id": "okControls",
+      "optional": false,
+      "advanced": true,
+      "allow_multiple": false,
+      "default_values": [
+        "False"
+      ],
+      "field_type": "dropdown",
+      "dropdown_options": {
+        "options": [
+          {
+            "value": "True",
+            "display": "True"
+          },
+          {
+            "value": "False",
+            "display": "False"
+          }
+        ]
+      }
+    },
+    {
+      "id": "okDay",
+      "optional": false,
+      "advanced": true,
+      "allow_multiple": false,
+      "default_values": [
+        "True"
+      ],
+      "field_type": "dropdown",
+      "dropdown_options": {
+        "options": [
+          {
+            "value": "True",
+            "display": "True"
+          },
+          {
+            "value": "False",
+            "display": "False"
+          }
+        ]
+      }
+    },
+    {
+      "id": "okLane",
+      "optional": false,
+      "advanced": true,
+      "allow_multiple": false,
+      "default_values": [
+        "True"
+      ],
+      "field_type": "dropdown",
+      "dropdown_options": {
+        "options": [
+          {
+            "value": "True",
+            "display": "True"
+          },
+          {
+            "value": "False",
+            "display": "False"
+          }
+        ]
+      }
+    },
+    {
+      "id": "drop_exps",
+      "optional": false,
+      "advanced": true,
+      "allow_multiple": false,
+      "default_values": [
+        "False"
+      ],
+      "field_type": "dropdown",
+      "dropdown_options": {
+        "options": [
+          {
+            "value": "True",
+            "display": "True"
+          },
+          {
+            "value": "False",
+            "display": "False"
+          }
+        ]
+      }
+    },
+    {
+      "id": "compute_cofit_bool",
+      "optional": false,
+      "advanced": true,
+      "allow_multiple": false,
+      "default_values": [
+        "True"
+      ],
+      "field_type": "dropdown",
+      "dropdown_options": {
+        "options": [
+          {
+            "value": "True",
+            "display": "True"
+          },
+          {
+            "value": "False",
+            "display": "False"
+          }
+        ]
+      }
+    },
+    {
+      "id": "compute_High_bool",
+      "optional": false,
+      "advanced": true,
+      "allow_multiple": false,
+      "default_values": [
+        "True"
+      ],
+      "field_type": "dropdown",
+      "dropdown_options": {
+        "options": [
+          {
+            "value": "True",
+            "display": "True"
+          },
+          {
+            "value": "False",
+            "display": "False"
+          }
+        ]
+      }
+    },
+    {
+      "id": "compute_spfc_bool",
+      "optional": false,
+      "advanced": true,
+      "allow_multiple": false,
+      "default_values": [
+        "True"
+      ],
+      "field_type": "dropdown",
+      "dropdown_options": {
+        "options": [
+          {
+            "value": "True",
+            "display": "True"
+          },
+          {
+            "value": "False",
+            "display": "False"
+          }
+        ]
+      }
+    },
+    {
+      "id": "minSampleReads",
+      "optional": false,
+      "advanced": true,
+      "allow_multiple": false,
+      "default_values": [
+        "20000"
+      ],
+      "text_options": {
+        "validate_as": "int"
+      },
+      "field_type": "text"
+    },
+    {
+      "id": "minGenesPerScaffold",
+      "optional": false,
+      "advanced": true,
+      "allow_multiple": false,
+      "default_values": [
+        "10"
+      ],
+      "text_options": {
+        "validate_as": "int"
+      },
+      "field_type": "text"
+    },
+    {
+      "id": "minT0Strain",
+      "optional": false,
+      "advanced": true,
+      "allow_multiple": false,
+      "default_values": [
+        "3"
+      ],
+      "text_options": {
+        "validate_as": "int"
+      },
+      "field_type": "text"
+    },
+    {
+      "id": "minT0Gene",
+      "optional": false,
+      "advanced": true,
+      "allow_multiple": false,
+      "default_values": [
+        "30"
+      ],
+      "text_options": {
+        "validate_as": "int"
+      },
+      "field_type": "text"
+    },
+    {
+      "id": "minGenesAllowed",
+      "optional": false,
+      "advanced": true,
+      "allow_multiple": false,
+      "default_values": [
+        "100"
+      ],
+      "text_options": {
+        "validate_as": "int"
+      },
+      "field_type": "text"
+    },
+    {
+      "id": "minGenesUsed12",
+      "optional": false,
+      "advanced": true,
+      "allow_multiple": false,
+      "default_values": [
+        "100"
+      ],
+      "text_options": {
+        "validate_as": "int"
+      },
+      "field_type": "text"
+    },
+    {
+      "id": "norm_median_window",
+      "optional": false,
+      "advanced": true,
+      "allow_multiple": false,
+      "default_values": [
+        "251"
+      ],
+      "text_options": {
+        "validate_as": "int"
+      },
+      "field_type": "text"
+    },
+    {
+      "id": "min_gMed",
+      "optional": false,
+      "advanced": true,
+      "allow_multiple": false,
+      "default_values": [
+        "50"
+      ],
+      "text_options": {
+        "validate_as": "int",
+        "min_int": 0,
+        "max_int": 10000
+      },
+      "field_type": "text"
+    },
+    {
+      "id": "max_mad12",
+      "optional": false,
+      "advanced": true,
+      "allow_multiple": false,
+      "default_values": [
+        "0.5"
+      ],
+      "text_options": {
+        "validate_as": "float",
+        "min_float": 0
+      },
+      "field_type": "text"
+    },
+    {
+      "id": "min_cor12",
+      "optional": false,
+      "advanced": true,
+      "allow_multiple": false,
+      "default_values": [
+        "0.1"
+      ],
+      "text_options": {
+        "validate_as": "float",
+        "min_float": 0
+      },
+      "field_type": "text"
+    },
+    {
+      "id": "max_gccor",
+      "optional": false,
+      "advanced": true,
+      "allow_multiple": false,
+      "default_values": [
+        "0.2"
+      ],
+      "text_options": {
+        "validate_as": "float"
+      },
+      "field_type": "text"
+    },
+    {
+      "id": "max_adjcor",
+      "optional": false,
+      "advanced": true,
+      "allow_multiple": false,
+      "default_values": [
+        "0.25"
+      ],
+      "text_options": {
+        "validate_as": "float"
+      },
+      "field_type": "text"
+    },
+    {
+      "id": "nTopCofit",
+      "optional": false,
+      "advanced": true,
+      "allow_multiple": false,
+      "default_values": [
+        "-1"
+      ],
+      "text_options": {
+        "validate_as": "int"
+      },
+      "field_type": "text"
+    },
+    {
+      "id": "minCofitExp",
+      "optional": false,
+      "advanced": true,
+      "allow_multiple": false,
+      "default_values": [
+        "5"
+      ],
+      "text_options": {
+        "validate_as": "int"
+      },
+      "field_type": "text"
+    },
+    {
+      "id": "Spfc_minT",
+      "optional": false,
+      "advanced": true,
+      "allow_multiple": false,
+      "default_values": [
+        "5.0"
+      ],
+      "text_options": {
+        "validate_as": "float"
+      },
+      "field_type": "text"
+    },
+    {
+      "id": "Spfc_minFit",
+      "optional": false,
+      "advanced": true,
+      "allow_multiple": false,
+      "default_values": [
+        "1.0"
+      ],
+      "text_options": {
+        "validate_as": "float"
+      },
+      "field_type": "text"
+    },
+    {
+      "id": "Spfc_percentile",
+      "optional": false,
+      "advanced": true,
+      "allow_multiple": false,
+      "default_values": [
+        "0.95"
+      ],
+      "text_options": {
+        "validate_as": "float"
+      },
+      "field_type": "text"
+    },
+    {
+      "id": "Spfc_percentileFit",
+      "optional": false,
+      "advanced": true,
+      "allow_multiple": false,
+      "default_values": [
+        "1.0"
+      ],
+      "text_options": {
+        "validate_as": "float"
+      },
+      "field_type": "text"
+    },
+    {
+      "id": "Spfc_minDelta",
+      "optional": false,
+      "advanced": true,
+      "allow_multiple": false,
+      "default_values": [
+        "0.5"
+      ],
+      "text_options": {
+        "validate_as": "float"
+      },
+      "field_type": "text"
+    },
+    {
+      "id": "High_min_fit",
+      "optional": false,
+      "advanced": true,
+      "allow_multiple": false,
+      "default_values": [
+        "4.0"
+      ],
+      "text_options": {
+        "validate_as": "float"
+      },
+      "field_type": "text"
+    },
+    {
+      "id": "High_min_t",
+      "optional": false,
+      "advanced": true,
+      "allow_multiple": false,
+      "default_values": [
+        "5.0"
+      ],
+      "text_options": {
+        "validate_as": "float"
+      },
+      "field_type": "text"
+    },
+    {
+      "id": "High_min_reads",
+      "optional": false,
+      "advanced": true,
+      "allow_multiple": false,
+      "default_values": [
+        "10"
+      ],
+      "text_options": {
+        "validate_as": "int"
+      },
+      "field_type": "text"
+    },
+    {
+      "id": "High_min_strains",
+      "optional": false,
+      "advanced": true,
+      "allow_multiple": false,
+      "default_values": [
+        "2"
+      ],
+      "text_options": {
+        "validate_as": "int"
+      },
+      "field_type": "text"
+    },
+    {
+      "id": "High_max_se",
+      "optional": false,
+      "advanced": true,
+      "allow_multiple": false,
+      "default_values": [
+        "2.0"
+      ],
+      "text_options": {
+        "validate_as": "float"
+      },
+      "field_type": "text"
+    },
+    {
+      "id": "High_min_gMean",
+      "optional": false,
+      "advanced": true,
+      "allow_multiple": false,
+      "default_values": [
+        "10"
+      ],
+      "text_options": {
+        "validate_as": "int"
+      },
+      "field_type": "text"
+    },
+    {
+      "id": "High_max_below",
+      "optional": false,
+      "advanced": true,
+      "allow_multiple": false,
+      "default_values": [
+        "8"
+      ],
+      "text_options": {
+        "validate_as": "int"
+      },
+      "field_type": "text"
+    },
+    {
+      "id": "High_min_strain_fraction",
+      "optional": false,
+      "advanced": true,
+      "allow_multiple": false,
+      "default_values": [
+        "0.5"
+      ],
+      "text_options": {
+        "validate_as": "float"
+      },
+      "field_type": "text"
+    },
+    {
+      "id": "Strong_lr",
+      "optional": false,
+      "advanced": true,
+      "allow_multiple": false,
+      "default_values": [
+        "2.0"
+      ],
+      "text_options": {
+        "validate_as": "float"
+      },
+      "field_type": "text"
+    },
+    {
+      "id": "Strong_t",
+      "optional": false,
+      "advanced": true,
+      "allow_multiple": false,
+      "default_values": [
+        "5.0"
+      ],
+      "text_options": {
+        "validate_as": "float"
+      },
+      "field_type": "text"
+    },
+    {
+      "id": "output_name",
+      "optional": false,
+      "advanced": false,
+      "allow_multiple": false,
+      "default_values": [
+        ""
+      ],
+      "field_type": "text",
+      "text_options": {
+        "is_output_name": true
+      }
+    }
+  ],
+  "behavior": {
+    "service-mapping": {
+      "url": "",
+      "name": "barseqR",
+      "method": "run_barseqR",
+      "input_mapping": [
+        {
+          "narrative_system_variable": "workspace",
+          "target_property": "workspace_name"
+        },
+        {
+          "narrative_system_variable": "workspace_id",
+          "target_property": "workspace_id"
+        },
+        {
+          "input_parameter": "genome_ref",
+          "target_property": "genome_ref",
+          "target_type_transform": "resolved-ref"
+        },
+        {
+          "input_parameter": "mutantpool_ref",
+          "target_property": "mutantpool_ref",
+          "target_type_transform": "resolved-ref"
+        },
+        {
+          "input_parameter": "exps_ref",
+          "target_property": "exps_ref",
+          "target_type_transform": "resolved-ref"
+        },
+        {
+          "input_parameter": "sets_refs",
+          "target_property": "sets_refs",
+          "target_type_transform": "resolved-ref"
+        },
+        {
+          "input_parameter": "High_max_below",
+          "target_property": "High_max_below"
+        },
+        {
+          "input_parameter": "High_max_se",
+          "target_property": "High_max_se"
+        },
+        {
+          "input_parameter": "High_min_fit",
+          "target_property": "High_min_fit"
+        },
+        {
+          "input_parameter": "High_min_gMean",
+          "target_property": "High_min_gMean"
+        },
+        {
+          "input_parameter": "High_min_reads",
+          "target_property": "High_min_reads"
+        },
+        {
+          "input_parameter": "High_min_strain_fraction",
+          "target_property": "High_min_strain_fraction"
+        },
+        {
+          "input_parameter": "High_min_strains",
+          "target_property": "High_min_strains"
+        },
+        {
+          "input_parameter": "High_min_t",
+          "target_property": "High_min_t"
+        },
+        {
+          "input_parameter": "Spfc_minDelta",
+          "target_property": "Spfc_minDelta"
+        },
+        {
+          "input_parameter": "Spfc_minFit",
+          "target_property": "Spfc_minFit"
+        },
+        {
+          "input_parameter": "Spfc_minT",
+          "target_property": "Spfc_minT"
+        },
+        {
+          "input_parameter": "Spfc_percentile",
+          "target_property": "Spfc_percentile"
+        },
+        {
+          "input_parameter": "Spfc_percentileFit",
+          "target_property": "Spfc_percentileFit"
+        },
+        {
+          "input_parameter": "Strong_lr",
+          "target_property": "Strong_lr"
+        },
+        {
+          "input_parameter": "Strong_t",
+          "target_property": "Strong_t"
+        },
+        {
+          "input_parameter": "compute_High_bool",
+          "target_property": "compute_High_bool"
+        },
+        {
+          "input_parameter": "compute_cofit_bool",
+          "target_property": "compute_cofit_bool"
+        },
+        {
+          "input_parameter": "compute_spfc_bool",
+          "target_property": "compute_spfc_bool"
+        },
+        {
+          "input_parameter": "drop_exps",
+          "target_property": "drop_exps"
+        },
+        {
+          "input_parameter": "max_adjcor",
+          "target_property": "max_adjcor"
+        },
+        {
+          "input_parameter": "max_gccor",
+          "target_property": "max_gccor"
+        },
+        {
+          "input_parameter": "max_mad12",
+          "target_property": "max_mad12"
+        },
+        {
+          "input_parameter": "minCofitExp",
+          "target_property": "minCofitExp"
+        },
+        {
+          "input_parameter": "minGenesAllowed",
+          "target_property": "minGenesAllowed"
+        },
+        {
+          "input_parameter": "minGenesPerScaffold",
+          "target_property": "minGenesPerScaffold"
+        },
+        {
+          "input_parameter": "minGenesUsed12",
+          "target_property": "minGenesUsed12"
+        },
+        {
+          "input_parameter": "minSampleReads",
+          "target_property": "minSampleReads"
+        },
+        {
+          "input_parameter": "minT0Gene",
+          "target_property": "minT0Gene"
+        },
+        {
+          "input_parameter": "minT0Strain",
+          "target_property": "minT0Strain"
+        },
+        {
+          "input_parameter": "min_cor12",
+          "target_property": "min_cor12"
+        },
+        {
+          "input_parameter": "min_gMed",
+          "target_property": "min_gMed"
+        },
+        {
+          "input_parameter": "nTopCofit",
+          "target_property": "nTopCofit"
+        },
+        {
+          "input_parameter": "norm_median_window",
+          "target_property": "norm_median_window"
+        },
+        {
+          "input_parameter": "okControls",
+          "target_property": "okControls"
+        },
+        {
+          "input_parameter": "okDay",
+          "target_property": "okDay"
+        },
+        {
+          "input_parameter": "okLane",
+          "target_property": "okLane"
+        },
+        {
+          "input_parameter": "output_name",
+          "target_property": "output_name"
+        }
+      ],
+      "output_mapping": [
+        {
+          "service_method_output_path": [
+            0,
+            "report_name"
+          ],
+          "target_property": "report_name"
+        },
+        {
+          "service_method_output_path": [
+            0,
+            "report_ref"
+          ],
+          "target_property": "report_ref"
+        }
+      ]
+    }
+  },
+  "job_id_output_field": "docker"
 }

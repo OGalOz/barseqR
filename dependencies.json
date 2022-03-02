@@ -11,6 +11,10 @@
   "type" : "sdk",
   "version_tag" : "release"
 }, {
+  "module_name" : "rbts_genome_to_genetable",
+  "type" : "sdk",
+  "version_tag" : "dev"
+}, {
   "module_name" : "SampleService",
   "type" : "sdk",
   "version_tag" : "release"

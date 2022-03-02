@@ -2,3 +2,5 @@ test_local
 sdk.cfg
 tkn.txt
 TD.txt
+.DS_Store
+lib/BarSeqRViz

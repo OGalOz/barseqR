@@ -67,12 +67,11 @@ class barseqRTest(unittest.TestCase):
         # self.assertEqual(ret[...], ...) or other unittest methods
 
         # Keio 
-        genome_ref = "62550/4/1"
-        exps_ref = "62550/57/1"
+        genome_ref = "62686/89/1"
+        exps_ref = "62686/91/1"
 
-        poolfile_ref = "62550/55/1"
-        sets_refs = ["62550/53/1", 
-                    "62550/52/1"]
+        poolfile_ref = "62686/93/1"
+        sets_refs = ["62686/95/1"]
         #            "62550/51/1",
         #            "62550/50/1"]
 
@@ -81,7 +80,7 @@ class barseqRTest(unittest.TestCase):
         base_input_d = {
          'workspace_name': self.wsName,
          'genome_ref': genome_ref,
-         'poolfile_ref': poolfile_ref,
+         'mutantpool_ref': poolfile_ref,
          'exps_ref': exps_ref,
          'sets_refs': sets_refs,
          'output_name': output_name
